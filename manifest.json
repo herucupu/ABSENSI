@@ -1,0 +1,16 @@
+{
+  "name": "Absensi & Laporan Harian — RSI At-Tin Husada",
+  "short_name": "Absensi RSI",
+  "description": "Absensi karyawan dan laporan harian RSI At-Tin Husada Ngawi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E6EEFA",
+  "theme_color": "#1458B0",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
