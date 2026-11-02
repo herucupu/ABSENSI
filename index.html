@@ -116,6 +116,11 @@ main{padding:14px var(--pad) calc(96px + var(--safe-b));max-width:760px;margin:0
 .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9px;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;color:#fff;}
 .tag-P{background:linear-gradient(135deg,var(--teal),#17C7BE);} .tag-S{background:linear-gradient(135deg,var(--amber),#F0A84B);}
 .tag-M{background:linear-gradient(135deg,var(--violet),#9C82EA);} .tag-L{background:linear-gradient(135deg,#9AA6BD,#B7C0D1);color:#222;}
+.tag-D{background:linear-gradient(135deg,var(--blue),#4C9BE8);}
+.nav.many button{font-size:10px;} .nav.many button .ic{font-size:18px;}
+.jg-unit h3{display:flex;align-items:center;justify-content:space-between;gap:8px;} .jg-n{min-width:26px;padding:2px 9px;border-radius:12px;background:#E3F6EE;color:#0a7a50;font-size:13px;text-align:center;font-weight:700;} .jg-n.zero{background:#EEF1F7;color:#6a7592;}
+.jg-p{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(154,166,189,.25);} .jg-p .grow{min-width:0;} .jg-p .t{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.jg-wa{text-decoration:none;padding:7px 11px;border-radius:12px;background:#E3F6EE;color:#0a7a50;font-weight:700;font-size:13px;}
 .flag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin:2px 3px 0 0;background:rgba(224,138,43,.18);color:#9a5a10;border:1px solid rgba(224,138,43,.35);}
 .flag.bad{background:#fff;color:#8f2a1f;border-color:rgba(220,59,46,.6);} .flag.ok{background:rgba(31,191,134,.16);color:#0a7a50;border-color:rgba(31,191,134,.35);}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch;}
@@ -228,6 +233,18 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
       <div class="glass card"><h3>🕘 Absen Hari Ini</h3><div id="todayList"></div></div>
     </section>
 
+    <!-- JAGA SEKARANG -->
+    <section class="page hidden" id="pg-jaga">
+      <div class="row between" style="margin-bottom:8px"><h2 style="margin:0">🩺 Jaga Sekarang</h2><button class="btn btn-sm" id="jgRefresh">↻ Segarkan</button></div>
+      <div class="small dim" style="margin-bottom:10px">Daftar petugas yang sudah absen masuk dan belum pulang, per unit. Diperbarui otomatis tiap 30 detik. <span id="jgAt"></span></div>
+      <div class="row wrap" style="margin-bottom:10px">
+        <select class="inp grow" id="jgUnit" style="min-width:120px"></select>
+        <input class="inp grow" id="jgSearch" placeholder="🔍 Cari nama…" style="min-width:120px">
+      </div>
+      <div class="sum-grid" id="jgSum"></div>
+      <div id="jgList"></div>
+    </section>
+
     <!-- LAPORAN -->
     <section class="page hidden" id="pg-laporan">
       <div class="glass card">
@@ -257,7 +274,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
         <button class="chip active" data-f="all">Semua</button><button class="chip" data-f="cek">⚠ Perlu dicek</button><button class="chip" data-f="belum">⏳ Belum pulang</button>
       </div>
       <div class="sum-grid" id="tmSum"></div>
-      <div class="glass card" style="padding:8px 10px"><div class="scroll-x"><table id="tmTable"><thead><tr><th>Nama</th><th class="n">Hari</th><th class="n">Jam</th><th class="n">P/S/M</th><th class="n">⚠</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="glass card" style="padding:8px 10px"><div class="scroll-x"><table id="tmTable"><thead><tr><th>Nama</th><th class="n">Hari</th><th class="n">Jam</th><th class="n">P/S/D/M</th><th class="n">⚠</th></tr></thead><tbody></tbody></table></div></div>
       <button class="btn btn-primary btn-block" id="btnExport" style="padding:14px">⬇ Export Excel</button>
     </section>
 
@@ -274,7 +291,8 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
         <div class="row"><div class="field grow"><label>Email</label><input id="akEmail" type="email" autocapitalize="none" placeholder="untuk reset password"></div><div class="field grow"><label>WhatsApp</label><input id="akHp" inputmode="tel" placeholder="0812xxxxxxx"></div></div>
         <div class="row"><div class="field grow"><label>NIP</label><input id="akNip" class="ro" readonly></div><div class="field grow"><label>Unit</label><input id="akUnit" class="ro" readonly></div></div>
         <div class="row"><div class="field grow"><label>Username</label><input id="akUser" class="ro" readonly></div><div class="field grow"><label>Peran</label><input id="akRole" class="ro" readonly></div></div>
-        <div class="small dim" style="margin-bottom:12px">NIP, unit, username, dan peran diubah oleh admin. Hubungi admin bila ada yang keliru.</div>
+        <div class="small dim" style="margin-bottom:8px">NIP, unit, username, dan peran dikunci agar data absensi tetap rapi. Bila ada yang keliru atau Anda pindah unit, ajukan ke admin.</div>
+        <button class="btn btn-block" id="akMinta" style="margin-bottom:12px">💬 Ajukan perubahan NIP / Unit / Username ke Admin</button>
         <button class="btn btn-teal btn-block" id="akSave" style="padding:14px">Simpan Perubahan</button>
       </div>
       <div class="glass card"><h3>🔒 Keamanan &amp; Aplikasi</h3>
@@ -286,13 +304,14 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 
     <!-- ADMIN -->
     <section class="page hidden" id="pg-admin">
-      <div class="chips"><button class="chip active" data-a="kar">👥 Karyawan</button><button class="chip" data-a="app">🆕 Persetujuan<span class="cnt hidden" id="cntApp"></span></button><button class="chip" data-a="res">🔑 Reset Password<span class="cnt hidden" id="cntRes"></span></button><button class="chip" data-a="set">⚙️ Lokasi &amp; Pengaturan</button></div>
+      <div class="chips"><button class="chip active" data-a="kar">👥 Karyawan</button><button class="chip" data-a="app">🆕 Persetujuan<span class="cnt hidden" id="cntApp"></span></button><button class="chip" data-a="res">🔑 Reset Password<span class="cnt hidden" id="cntRes"></span></button><button class="chip" data-a="unit">🏥 Unit</button><button class="chip" data-a="set">⚙️ Lokasi &amp; Pengaturan</button></div>
       <div id="adKar">
         <div class="row wrap" style="margin-bottom:10px"><input class="inp grow" id="kySearch" placeholder="🔍 Cari karyawan…"><button class="btn btn-primary btn-sm" id="kyAdd">+ Tambah</button><button class="btn btn-sm" id="kyImport">⇪ Impor</button></div>
         <div id="kyList"></div>
       </div>
       <div id="adApp" class="hidden"><div class="small dim" style="margin-bottom:10px">Pendaftaran mandiri karyawan. Periksa foto & data, pilih peran, lalu setujui. Akun baru baru bisa login setelah disetujui.</div><div id="apList"></div></div>
       <div id="adRes" class="hidden"><div class="small dim" style="margin-bottom:10px">Karyawan yang lupa password dan <b>tidak punya email terdaftar</b> masuk di sini. Buat password sementara lalu kirim lewat WhatsApp.</div><div id="rsList"></div></div>
+      <div id="adUnit" class="hidden"><div class="small dim" style="margin-bottom:10px">Daftar unit dipakai saat karyawan mendaftar dan untuk halaman Jaga Sekarang. Mengganti nama unit ikut mengubah unit semua karyawannya.</div><div class="row" style="margin-bottom:10px"><input class="inp grow" id="unNew" placeholder="Nama unit baru, mis. IGD"><button class="btn btn-primary btn-sm" id="unAdd">+ Tambah</button></div><div id="unList"></div></div>
       <div id="adSet" class="hidden">
         <div class="glass card"><h3>📍 Titik Lokasi Absen</h3>
           <div class="small dim" style="margin-bottom:10px">Absen di luar radius tetap diterima, hanya diberi tanda "Lokasi jauh" untuk dicek atasan. Radius longgar (300–500 m) disarankan.</div>
@@ -320,8 +339,8 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
   <h2 id="abTitle">Absen Masuk</h2>
   <div class="field" id="abShiftWrap"><label>Shift hari ini</label>
     <div class="shift-pick" id="abShift">
-      <button data-s="P"><span class="e">🌅</span>P<small>Pagi</small></button><button data-s="S"><span class="e">☀️</span>S<small>Siang</small></button>
-      <button data-s="M"><span class="e">🌙</span>M<small>Malam</small></button><button data-s="L"><span class="e">🏖️</span>L<small>Libur</small></button>
+      <button data-s="P"><span class="e">🌅</span>Pagi<small>P</small></button><button data-s="S"><span class="e">☀️</span>Siang<small>S</small></button>
+      <button data-s="D"><span class="e">🌤️</span>Middle<small>D</small></button><button data-s="M"><span class="e">🌙</span>Malam<small>M</small></button>
     </div></div>
   <div class="field"><label id="abJamLbl">Jam masuk</label><input type="time" id="abJam"></div>
   <div class="field"><label>Foto (selfie)</label>
@@ -340,14 +359,15 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 /* ============================================================
    KONFIGURASI — isi dengan URL Web App Apps Script Anda
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycby1fsJgozcfeD8ZUhAgDfCIRtIGATyCUx9S_CM-qOS6CQWMJFXkCBX96qy4v-1DtPoV/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzmQ0WOttc0MKDDNDPyPWe4Y2z9T8mPSMvLTb09x3f6xsEkP6qSevqG-df6JRSQVzwM/exec";
 
 /* ---------------- util ---------------- */
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-const SHIFT_NAME = { P: 'Pagi', S: 'Siang', M: 'Malam', L: 'Libur' };
+const SHIFT_NAME = { P: 'Pagi', S: 'Siang', D: 'Middle', M: 'Malam', L: 'Libur' };
+const NEED_VER_UI = 4;
 const FLAG_LABEL = { LOKASI_JAUH: 'Lokasi jauh', GPS_GAGAL: 'GPS gagal', JAM_BEDA: 'Jam beda dgn server', JADWAL_L: 'Absen di hari libur', LUPA_PULANG: 'Lupa pulang', KOREKSI: 'Dikoreksi', DICEK: 'Sudah dicek' };
 const FLAG_CEK = ['LOKASI_JAUH', 'GPS_GAGAL', 'JAM_BEDA', 'JADWAL_L'];
 const pad = (n) => (n < 10 ? '0' : '') + n;
@@ -374,7 +394,7 @@ function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classNam
 /* ---------------- API ---------------- */
 const API_READY = API_URL && API_URL.indexOf('PASTE_URL') < 0;
 let pubInfo = { waAdmin: '' };
-const NEED_VER = 3;
+const NEED_VER = 4;
 async function loadPubInfo() {
   if (!API_READY) return;
   try { pubInfo = await apiGet('infoPublik', { token: '' }); if (!pubInfo.ver || pubInfo.ver < NEED_VER) $('verWarn').classList.remove('hidden'); }
@@ -481,10 +501,11 @@ async function startApp() {
 }
 function tick() { const n = nowJ(); $('hClock').textContent = n.hhmm + ':' + n.sec; $('hDate').textContent = fmtDate(n.date); if (S && S.open) updateDur(); }
 function buildNav() {
-  const items = [['home', '🏠', 'Beranda'], ['laporan', '📝', 'Laporan'], ['riwayat', '🕘', 'Riwayat']];
+  const items = [['home', '🏠', 'Beranda'], ['jaga', '🩺', 'Jaga'], ['laporan', '📝', 'Laporan'], ['riwayat', '🕘', 'Riwayat']];
   if (me.role === 'atasan' || me.role === 'admin') items.push(['tim', '👥', 'Tim']);
   if (me.role === 'admin') items.push(['admin', '⚙️', 'Admin']);
   items.push(['akun', '👤', 'Akun']);
+  $('nav').classList.toggle('many', items.length > 5);
   $('nav').innerHTML = items.map((i) => `<button data-p="${i[0]}"><span class="ic">${i[1]}</span>${i[2]}</button>`).join('');
   $('nav').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => go(b.dataset.p)));
 }
@@ -493,7 +514,8 @@ function go(p) {
   document.querySelectorAll('.page').forEach((x) => x.classList.toggle('hidden', x.id !== 'pg-' + p));
   $('nav').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.p === p));
   $('menu').classList.add('hidden'); window.scrollTo(0, 0);
-  if (p === 'home') refreshHome(); else if (p === 'laporan') initLaporan(); else if (p === 'riwayat') loadRiwayat(); else if (p === 'tim') loadTim(); else if (p === 'admin') initAdmin(); else if (p === 'akun') renderAkun();
+  if (p === 'home') refreshHome(); else if (p === 'laporan') initLaporan(); else if (p === 'riwayat') loadRiwayat(); else if (p === 'tim') loadTim(); else if (p === 'admin') initAdmin(); else if (p === 'akun') renderAkun(); else if (p === 'jaga') loadJaga();
+  clearInterval(jagaT); jagaT = null; if (p === 'jaga') jagaT = setInterval(() => { if (!document.hidden) loadJaga(true); }, 30000);
 }
 
 /* ---------------- avatar & foto profil ---------------- */
@@ -595,7 +617,7 @@ function openAbsen(mode) {
   $('abJamLbl').textContent = mode === 'masuk' ? 'Jam masuk (bisa diubah)' : 'Jam pulang (bisa diubah)';
   $('abShiftWrap').classList.toggle('hidden', mode !== 'masuk');
   const n = nowJ(); $('abJam').value = n.hhmm;
-  const last = localStorage.getItem('absensi_last_shift') || 'P';
+  let last = localStorage.getItem('absensi_last_shift') || 'P'; if (['P', 'S', 'D', 'M'].indexOf(last) < 0) last = 'P';
   document.querySelectorAll('#abShift button').forEach((b) => b.classList.toggle('sel', b.dataset.s === last));
   $('abPhotoBox').innerHTML = '<div class="ph">📷<br><b>Ketuk untuk ambil foto</b></div>';
   $('abSend').disabled = true; $('abSend').textContent = 'Kirim';
@@ -730,8 +752,8 @@ async function loadRiwayat() {
   if (!rwKey) rwKey = periodKeyOf(S ? S.today : nowJ().date);
   $('rwLabel').textContent = periodLabel(rwKey); $('rwList').innerHTML = '<div class="empty"><span class="spin dk"></span></div>';
   try {
-    const r = await apiGet('riwayat', { period: rwKey }); const s = r.summary || { hari: 0, menit: 0, P: 0, S: 0, M: 0, cek: 0, belum: 0 };
-    $('rwSum').innerHTML = `<div><b>${s.hari}</b><span>Hari hadir</span></div><div><b>${fmtDur(s.menit)}</b><span>Total jam</span></div><div><b>${s.P}/${s.S}/${s.M}</b><span>P / S / M</span></div><div><b>${s.belum}</b><span>Belum pulang</span></div>`;
+    const r = await apiGet('riwayat', { period: rwKey }); const s = r.summary || { hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, cek: 0, belum: 0 };
+    $('rwSum').innerHTML = `<div><b>${s.hari}</b><span>Hari hadir</span></div><div><b>${fmtDur(s.menit)}</b><span>Total jam</span></div><div><b>${s.P}/${s.S}/${s.D || 0}/${s.M}</b><span>P / S / D / M</span></div><div><b>${s.belum}</b><span>Belum pulang</span></div>`;
     $('rwList').innerHTML = r.rows.length ? r.rows.map((x) => recItem(x) + '').map((h, i) => {
       const lap = r.laporan[me.id + '_' + r.rows[i].tanggal];
       return lap ? h.replace(/<\/div><\/div>$/, `</div>${'<div class="lap-text">' + esc(lap) + '</div>'}</div>`) : h;
@@ -759,7 +781,7 @@ function renderTim() {
   const hadir = tot.filter((s) => s.hari > 0).length, cek = tot.reduce((a, s) => a + s.cek, 0), bel = tot.reduce((a, s) => a + s.belum, 0);
   $('tmSum').innerHTML = `<div><b>${tot.length}</b><span>Karyawan</span></div><div><b>${hadir}</b><span>Pernah hadir</span></div><div><b>${cek}</b><span>Perlu dicek</span></div><div><b>${bel}</b><span>Belum pulang</span></div>`;
   const tb = $('tmTable').querySelector('tbody');
-  tb.innerHTML = rows.length ? rows.map((s) => `<tr class="click" data-u="${esc(s.userId)}"><td><b>${esc(s.nama)}</b><div class="small dim">${esc(s.unit || '')}</div></td><td class="n">${s.hari}</td><td class="n mono">${fmtDur(s.menit)}</td><td class="n mono">${s.P}/${s.S}/${s.M}</td><td class="n">${s.cek ? '<span class="flag">' + s.cek + '</span>' : ''}${s.belum ? '<span class="flag bad">' + s.belum + '</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Tidak ada data.</td></tr>';
+  tb.innerHTML = rows.length ? rows.map((s) => `<tr class="click" data-u="${esc(s.userId)}"><td><b>${esc(s.nama)}</b><div class="small dim">${esc(s.unit || '')}</div></td><td class="n">${s.hari}</td><td class="n mono">${fmtDur(s.menit)}</td><td class="n mono">${s.P}/${s.S}/${s.D || 0}/${s.M}</td><td class="n">${s.cek ? '<span class="flag">' + s.cek + '</span>' : ''}${s.belum ? '<span class="flag bad">' + s.belum + '</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Tidak ada data.</td></tr>';
   tb.querySelectorAll('tr.click').forEach((tr) => tr.addEventListener('click', () => openEmployee(tr.dataset.u)));
 }
 $('tmPrev').addEventListener('click', () => { tmKey = shiftKey(tmKey, -1); loadTim(); });
@@ -781,7 +803,7 @@ function openEmployee(uid_) {
 }
 function openKoreksi(r, uid_) {
   openGen(`<h2>✎ Koreksi Absen</h2><div class="small dim" style="margin-bottom:10px">${esc(r.nama)} · ${fmtDate(r.tanggal)}</div>${flagHtml(r)}
-    <div class="field" style="margin-top:10px"><label>Shift</label><select id="kSh">${['P', 'S', 'M', 'L'].map((s) => `<option ${s === r.shift ? 'selected' : ''} value="${s}">${s} — ${SHIFT_NAME[s]}</option>`).join('')}</select></div>
+    <div class="field" style="margin-top:10px"><label>Shift</label><select id="kSh">${['P', 'S', 'D', 'M', 'L'].map((s) => `<option ${s === r.shift ? 'selected' : ''} value="${s}">${s} — ${SHIFT_NAME[s]}</option>`).join('')}</select></div>
     <div class="row"><div class="field grow"><label>Jam masuk</label><input type="time" id="kIn" value="${esc(r.jamMasuk)}"></div><div class="field grow"><label>Jam pulang</label><input type="time" id="kOut" value="${esc(r.jamPulang || '')}"></div></div>
     <div class="field"><label>Tanggal pulang</label><input type="date" id="kTgl" value="${esc(r.tglPulang || r.tanggal)}"></div>
     <div class="field"><label>Catatan</label><input id="kCat" maxlength="300" value="${esc(r.catatan || '')}" placeholder="mis. lupa absen pulang"></div>
@@ -812,8 +834,8 @@ $('btnExport').addEventListener('click', async () => {
     const wb = new ExcelJS.Workbook(); wb.creator = 'Absensi RSI At-Tin Husada';
     const thin = { style: 'thin', color: { argb: 'FF9AA6BD' } }, bd = { top: thin, left: thin, bottom: thin, right: thin };
     const head = (ws, cols) => { ws.columns = cols; const h = ws.getRow(1); h.height = 24; h.eachCell((c) => { c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1458B0' } }; c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; c.border = bd; }); ws.views = [{ state: 'frozen', ySplit: 1 }]; };
-    const ws = wb.addWorksheet('Rekap'); head(ws, [{ header: 'No', width: 6 }, { header: 'Nama', width: 30 }, { header: 'Unit', width: 18 }, { header: 'Hari Hadir', width: 11 }, { header: 'Total Jam', width: 12 }, { header: 'Shift P', width: 9 }, { header: 'Shift S', width: 9 }, { header: 'Shift M', width: 9 }, { header: 'Absen di Libur', width: 13 }, { header: 'Perlu Dicek', width: 12 }, { header: 'Belum Pulang', width: 13 }]);
-    sum.forEach((s, i) => ws.addRow([i + 1, s.nama, s.unit, s.hari, +(s.menit / 60).toFixed(1), s.P, s.S, s.M, s.L, s.cek, s.belum]));
+    const ws = wb.addWorksheet('Rekap'); head(ws, [{ header: 'No', width: 6 }, { header: 'Nama', width: 30 }, { header: 'Unit', width: 18 }, { header: 'Hari Hadir', width: 11 }, { header: 'Total Jam', width: 12 }, { header: 'Shift P', width: 9 }, { header: 'Shift S', width: 9 }, { header: 'Shift D (Middle)', width: 9 }, { header: 'Shift M', width: 9 }, { header: 'Absen di Libur', width: 13 }, { header: 'Perlu Dicek', width: 12 }, { header: 'Belum Pulang', width: 13 }]);
+    sum.forEach((s, i) => ws.addRow([i + 1, s.nama, s.unit, s.hari, +(s.menit / 60).toFixed(1), s.P, s.S, s.D || 0, s.M, s.L, s.cek, s.belum]));
     const wd = wb.addWorksheet('Detail'); head(wd, [{ header: 'Tanggal', width: 14 }, { header: 'Nama', width: 28 }, { header: 'Unit', width: 16 }, { header: 'Shift', width: 8 }, { header: 'Jam Masuk', width: 11 }, { header: 'Jam Pulang', width: 11 }, { header: 'Durasi', width: 10 }, { header: 'Status', width: 28 }, { header: 'Laporan Harian', width: 60 }, { header: 'Catatan', width: 24 }]);
     rows.slice().sort((a, b) => (a.nama < b.nama ? -1 : a.nama > b.nama ? 1 : a.tanggal < b.tanggal ? -1 : 1)).forEach((r) => wd.addRow([r.tanggal, r.nama, r.unit, r.shift, r.jamMasuk, r.jamPulang || '', r.durasi != null ? fmtDur(r.durasi) : '', flagsOf(r).map((f) => FLAG_LABEL[f] || f).join(', '), tmData.laporan[r.userId + '_' + r.tanggal] || '', r.catatan || '']));
     [ws, wd].forEach((w) => w.eachRow((row, n) => { if (n > 1) row.eachCell({ includeEmpty: true }, (c) => { c.border = bd; c.alignment = { vertical: 'top', wrapText: true }; }); }));
@@ -826,8 +848,8 @@ $('btnExport').addEventListener('click', async () => {
 
 /* ---------------- ADMIN ---------------- */
 let kyRows = [], cfgLok = [], cfgRet = 90;
-document.querySelectorAll('#pg-admin .chip').forEach((c) => c.addEventListener('click', () => { document.querySelectorAll('#pg-admin .chip').forEach((x) => x.classList.toggle('active', x === c)); ['kar', 'app', 'res', 'set'].forEach((k) => $('ad' + { kar: 'Kar', app: 'App', res: 'Res', set: 'Set' }[k]).classList.toggle('hidden', c.dataset.a !== k)); }));
-async function initAdmin() { await Promise.all([loadKaryawan(), loadConfig(), loadPending(), loadResets(), loadState().then(updateBadges).catch(() => {})]); }
+document.querySelectorAll('#pg-admin .chip').forEach((c) => c.addEventListener('click', () => { document.querySelectorAll('#pg-admin .chip').forEach((x) => x.classList.toggle('active', x === c)); ['kar', 'app', 'res', 'unit', 'set'].forEach((k) => $('ad' + { kar: 'Kar', app: 'App', res: 'Res', unit: 'Unit', set: 'Set' }[k]).classList.toggle('hidden', c.dataset.a !== k)); }));
+async function initAdmin() { await Promise.all([loadKaryawan(), loadConfig(), loadPending(), loadResets(), loadState().then(() => { updateBadges(); renderUnitAdmin(); }).catch(() => {})]); }
 async function loadKaryawan() { try { kyRows = (await apiGet('karyawanList')).rows; renderKaryawan(); } catch (e) { $('kyList').innerHTML = `<div class="banner red">${esc(e.message)}</div>`; } }
 function renderKaryawan() {
   const q = $('kySearch').value.trim().toLowerCase();
@@ -842,7 +864,7 @@ function openKaryawan(r) {
   openGen(`<h2>${n ? '+ Karyawan Baru' : 'Ubah Karyawan'}</h2>${n ? '' : '<div style="text-align:center"><div class="avatar xl2" id="kyAv" style="margin:0 auto 10px"></div></div>'}
     <div class="field"><label>Nama lengkap</label><input id="kyNama" value="${esc(r.nama)}"></div>
     <div class="row"><div class="field grow"><label>NIP</label><input id="kyNip" value="${esc(r.nip)}"></div><div class="field grow"><label>Unit</label><input id="kyUnit" value="${esc(r.unit)}" list="unitList"></div></div>
-    <datalist id="unitList">${[...new Set(kyRows.map((x) => x.unit).filter(Boolean))].map((u) => `<option value="${esc(u)}">`).join('')}</datalist>
+    <datalist id="unitList">${[...new Set([...((S && S.units) || []), ...kyRows.map((x) => x.unit)].filter(Boolean))].map((u) => `<option value="${esc(u)}">`).join('')}</datalist>
     <div class="row"><div class="field grow"><label>Username</label><input id="kyUser" value="${esc(r.username)}" autocapitalize="none"></div>
     <div class="field grow"><label>Peran</label><select id="kyRole">${[['karyawan', 'Karyawan'], ['atasan', 'Atasan (lihat unit)'], ['admin', 'Admin']].map((o) => `<option value="${o[0]}" ${r.role === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div></div>
     <div class="row"><div class="field grow"><label>Email</label><input id="kyEmail" type="email" value="${esc(r.email || '')}" placeholder="opsional"></div><div class="field grow"><label>WhatsApp</label><input id="kyHp" inputmode="tel" value="${esc(r.hp || '')}" placeholder="opsional"></div></div>
@@ -937,13 +959,15 @@ function openSignup() {
     <div style="text-align:center;margin-bottom:12px"><div class="avatar xl2" id="suAv" style="margin:0 auto 8px;cursor:pointer;font-size:30px">📷</div>
       <button class="btn btn-sm" id="suPick">Pilih foto profil (wajib)</button><input type="file" id="suFile" accept="image/*" class="hidden"></div>
     <div class="field"><label>Nama lengkap</label><input id="suNama" autocomplete="name"></div>
-    <div class="row"><div class="field grow"><label>NIP</label><input id="suNip" inputmode="text"></div><div class="field grow"><label>Unit</label><input id="suUnit" placeholder="mis. IT, IGD, Farmasi"></div></div>
+    <div class="row"><div class="field grow"><label>NIP</label><input id="suNip" inputmode="text"></div><div class="field grow"><label>Unit</label><select id="suUnit"><option value="">— Pilih unit —</option></select></div></div>
     <div class="field"><label>Username</label><input id="suUser" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="huruf kecil/angka"><div class="small" id="suHint" style="margin-top:4px"></div></div>
     <div class="field"><label>Email (opsional, untuk menerima password sementara)</label><input id="suEmail" type="email" autocapitalize="none" placeholder="nama@gmail.com"></div>
     <div class="field"><label>No. WhatsApp (opsional)</label><input id="suHp" inputmode="tel" placeholder="0812xxxxxxx"></div>
     <div class="field"><label>Password (min. 6 karakter)</label><input id="suPw" type="password" autocomplete="new-password"></div>
     <div class="field"><label>Ulangi password</label><input id="suPw2" type="password" autocomplete="new-password"></div>
     <div class="foot"><button class="btn" onclick="closeGen()">Batal</button><button class="btn btn-primary" id="suSend">Daftar</button></div>`);
+  const fillU = () => { const l = pubInfo.units || []; $('suUnit').innerHTML = '<option value="">— Pilih unit —</option>' + l.map((u) => `<option>${esc(u)}</option>`).join(''); };
+  fillU(); if (!(pubInfo.units || []).length) loadPubInfo().then(fillU);
   $('suAv').addEventListener('click', () => $('suFile').click()); $('suPick').addEventListener('click', () => $('suFile').click());
   $('suFile').addEventListener('change', async (e) => {
     const f = e.target.files[0]; if (!f) return;
@@ -959,11 +983,11 @@ function openSignup() {
   $('suSend').addEventListener('click', submitSignup);
 }
 async function submitSignup() {
-  const d = { nama: $('suNama').value.trim(), nip: $('suNip').value.trim(), unit: $('suUnit').value.trim(), username: $('suUser').value.trim().toLowerCase(), email: $('suEmail').value.trim().toLowerCase(), hp: $('suHp').value.trim(), password: $('suPw').value };
+  const d = { nama: $('suNama').value.trim(), nip: $('suNip').value.trim(), unit: $('suUnit').value, username: $('suUser').value.trim().toLowerCase(), email: $('suEmail').value.trim().toLowerCase(), hp: $('suHp').value.trim(), password: $('suPw').value };
   if (!suPhoto) return toast('Foto profil wajib diisi', true);
   if (d.nama.length < 3) return toast('Nama minimal 3 huruf', true);
   if (!d.nip) return toast('NIP wajib diisi', true);
-  if (!d.unit) return toast('Unit wajib diisi', true);
+  if (!d.unit) return toast('Pilih unit dahulu. Jika unit Anda belum ada, hubungi admin.', true);
   if (!/^[a-z0-9._-]{3,30}$/.test(d.username)) return toast('Username tidak valid', true);
   if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return toast('Format email tidak valid', true);
   if (d.password.length < 6) return toast('Password minimal 6 karakter', true);
@@ -1063,6 +1087,58 @@ async function makeTemp(userId, btn) {
   } catch (e) { toast(e.message, true); if (btn) { btn.disabled = false; btn.textContent = '🔑 Buat password sementara'; } }
 }
 
+/* ---------------- JAGA SEKARANG ---------------- */
+let jagaT = null, jagaData = null;
+async function loadJaga(silent) {
+  try { jagaData = await apiGet('jaga'); renderJaga(); }
+  catch (e) { if (e.message === 'Sesi berakhir') return; if (!silent || !jagaData) $('jgList').innerHTML = `<div class="banner red">${esc(e.message)}</div>`; }
+}
+function renderJaga() {
+  if (!jagaData) return;
+  const cur = $('jgUnit').value, names = jagaData.units.map((x) => x.unit);
+  $('jgUnit').innerHTML = '<option value="">Semua unit</option>' + names.map((u) => `<option>${esc(u)}</option>`).join(''); $('jgUnit').value = names.includes(cur) ? cur : '';
+  const fu = $('jgUnit').value, q = $('jgSearch').value.trim().toLowerCase();
+  let units = jagaData.units.filter((x) => !fu || x.unit === fu);
+  units = units.map((x) => ({ unit: x.unit, orang: x.orang.filter((o) => !q || o.nama.toLowerCase().includes(q)) })).filter((x) => !q || x.orang.length);
+  units.sort((a, b) => (b.unit === me.unit) - (a.unit === me.unit));
+  const total = jagaData.units.reduce((a, x) => a + x.orang.length, 0), aktif = jagaData.units.filter((x) => x.orang.length).length;
+  const byS = { P: 0, S: 0, D: 0, M: 0 }; jagaData.units.forEach((x) => x.orang.forEach((o) => { if (byS[o.shift] !== undefined) byS[o.shift]++; }));
+  $('jgSum').innerHTML = `<div><b>${total}</b><span>Sedang jaga</span></div><div><b>${aktif}</b><span>Unit ada petugas</span></div><div><b>${byS.P}/${byS.S}</b><span>Pagi / Siang</span></div><div><b>${byS.D}/${byS.M}</b><span>Middle / Malam</span></div>`;
+  $('jgAt').textContent = 'Terakhir: ' + (jagaData.now || '').substring(11, 19);
+  $('jgList').innerHTML = units.length ? units.map((x) => `<div class="glass card jg-unit"><h3><span>${esc(x.unit)}${x.unit === me.unit ? ' <span class="small dim">(unit Anda)</span>' : ''}</span><span class="jg-n ${x.orang.length ? '' : 'zero'}">${x.orang.length}</span></h3>${x.orang.length ? x.orang.map((o) => `<div class="jg-p"><div class="avatar">${esc(o.nama.charAt(0).toUpperCase())}</div><div class="grow"><div class="t">${esc(o.nama)}${o.userId === me.id ? ' <span class="small dim">(Anda)</span>' : ''}</div><div class="small dim">masuk ${esc(o.jamMasuk)}${o.tanggal !== jagaData.now.substring(0, 10) ? ' · ' + fmtDate(o.tanggal) : ''}</div></div><span class="tag tag-${esc(o.shift)}" title="${esc(SHIFT_NAME[o.shift] || '')}">${esc(SHIFT_NAME[o.shift] || o.shift)}</span>${o.hp ? `<a class="jg-wa" target="_blank" rel="noopener" href="${waLink(o.hp, 'Assalamualaikum ' + o.nama + ', ')}">WA</a>` : ''}</div>`).join('') : '<div class="small dim">Tidak ada petugas tercatat jaga saat ini.</div>'}</div>`).join('') : '<div class="empty">Tidak ada data.</div>';
+}
+$('jgRefresh').addEventListener('click', () => loadJaga()); $('jgUnit').addEventListener('change', renderJaga); $('jgSearch').addEventListener('input', renderJaga);
+
+/* ---------------- ADMIN: MASTER UNIT ---------------- */
+function renderUnitAdmin() {
+  const units = (S && S.units) || [];
+  const cnt = {}; kyRows.forEach((r) => { if (r.aktif !== 'N') cnt[r.unit] = (cnt[r.unit] || 0) + 1; });
+  $('unList').innerHTML = units.length ? units.map((u) => `<div class="item row between" data-u="${esc(u)}"><div><div class="t">${esc(u)}</div><div class="small dim">${cnt[u] || 0} karyawan</div></div><div class="row"><button class="btn btn-sm" data-act="ren">Ubah</button><button class="btn btn-sm" data-act="del">Hapus</button></div></div>`).join('') : '<div class="empty">Belum ada unit.</div>';
+  $('unList').querySelectorAll('.item').forEach((it) => {
+    const u = it.dataset.u;
+    it.querySelector('[data-act="ren"]').addEventListener('click', () => openUnitEdit(u));
+    it.querySelector('[data-act="del"]').addEventListener('click', async () => {
+      if ((cnt[u] || 0) > 0) return toast('Unit masih dipakai ' + cnt[u] + ' karyawan. Pindahkan dulu karyawannya.', true);
+      if (!confirm('Hapus unit "' + u + '"?')) return;
+      try { const st = await sendAndConfirm('unitHapus', { nama: u }, loadState, (x) => !x.units.includes(u)); if (st) { renderUnitAdmin(); toast('✅ Unit dihapus'); } else toast(NOT_CONFIRMED, true); } catch (e) { toast(e.message, true); }
+    });
+  });
+}
+$('unAdd').addEventListener('click', async () => {
+  const nama = $('unNew').value.trim(); if (!nama) return toast('Isi nama unit', true);
+  const b = $('unAdd'); b.disabled = true;
+  try { const st = await sendAndConfirm('unitSave', { nama }, loadState, (x) => x.units.some((y) => y.toLowerCase() === nama.toLowerCase())); if (st) { $('unNew').value = ''; renderUnitAdmin(); toast('✅ Unit ditambahkan'); } else toast(NOT_CONFIRMED, true); } catch (e) { toast(e.message, true); }
+  b.disabled = false;
+});
+function openUnitEdit(lama) {
+  openGen(`<h2>Ubah Nama Unit</h2><div class="small dim" style="margin-bottom:8px">Semua karyawan di unit ini ikut berpindah ke nama baru. Riwayat absen lama tetap memakai nama lama.</div><div class="field"><label>Nama unit</label><input id="unEdit" value="${esc(lama)}"></div><div class="foot"><button class="btn" onclick="closeGen()">Batal</button><button class="btn btn-primary" id="unSave">Simpan</button></div>`);
+  $('unSave').addEventListener('click', async () => {
+    const nama = $('unEdit').value.trim(); if (!nama) return toast('Isi nama unit', true); if (nama === lama) return closeGen();
+    $('unSave').disabled = true;
+    try { const st = await sendAndConfirm('unitSave', { nama, lama }, loadState, (x) => x.units.includes(nama) && !x.units.includes(lama)); if (st) { closeGen(); await loadKaryawan(); renderUnitAdmin(); toast('✅ Unit diubah'); } else { toast(NOT_CONFIRMED, true); $('unSave').disabled = false; } } catch (e) { toast(e.message, true); $('unSave').disabled = false; }
+  });
+}
+
 /* ---------------- AKUN SAYA ---------------- */
 function normWaJs(v) { let d = String(v || '').replace(/[^0-9]/g, ''); if (!d) return ''; if (d[0] === '0') d = '62' + d.slice(1); return d; }
 const ROLE_NAME = { karyawan: 'Karyawan', atasan: 'Atasan', admin: 'Admin' };
@@ -1072,6 +1148,11 @@ function renderAkun() {
   $('akNama').value = me.nama || ''; $('akEmail').value = me.email || ''; $('akHp').value = me.hp || '';
   $('akNip').value = me.nip || '—'; $('akUnit').value = me.unit || '—'; $('akUser').value = me.username || ''; $('akRole').value = ROLE_NAME[me.role] || me.role;
 }
+$('akMinta').addEventListener('click', async () => {
+  if (!pubInfo.waAdmin) await loadPubInfo();
+  if (!pubInfo.waAdmin) return toast('Nomor WhatsApp admin belum diatur. Hubungi admin IT langsung.', true);
+  window.open(waLink(pubInfo.waAdmin, `Assalamualaikum admin, saya ${me.nama} (NIP ${me.nip || '-'}, unit ${me.unit || '-'}, username ${me.username}). Mohon bantu ubah data berikut: `), '_blank');
+});
 $('akFoto').addEventListener('click', openFotoSheet); $('akPw').addEventListener('click', () => openPasswordSheet(false));
 $('akInstall').addEventListener('click', openInstallSheet); $('akOut').addEventListener('click', doLogout);
 $('akSave').addEventListener('click', async () => {

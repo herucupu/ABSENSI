@@ -19,14 +19,17 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 3;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 4;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
   'fotoMasuk', 'fotoPulang', 'latMasuk', 'lngMasuk', 'latPulang', 'lngPulang', 'jarakMasuk', 'jarakPulang',
   'flag', 'serverMasuk', 'serverPulang', 'catatan', 'pulangId'];
 var LAPOR_HDR = ['id', 'tanggal', 'userId', 'nama', 'isi', 'updatedAt'];
-var SHIFTS = ['P', 'S', 'M', 'L'];
+var SHIFTS = ['P', 'S', 'D', 'M', 'L'];   // P=Pagi, S=Siang, D=Middle, M=Malam, L=Libur (lama, hanya koreksi)
+var SHIFTS_PICK = ['P', 'S', 'D', 'M'];
+var SH_UNIT = 'Unit';
+var UNIT_HDR = ['nama'];
 var FLAG_CEK = ['LOKASI_JAUH', 'GPS_GAGAL', 'JAM_BEDA', 'JADWAL_L'];
 var SESSION_HOURS = 12;
 var SESSION_HOURS_REMEMBER = 24 * 30;
@@ -42,6 +45,7 @@ function setup() {
   ensureColumns_(ss.getSheetByName(SH_KARYAWAN), KARYAWAN_HDR);
   ensureSheet_(ss, SH_FOTO, FOTO_HDR);
   ensureSheet_(ss, SH_RESET, RESET_HDR);
+  ensureSheet_(ss, SH_UNIT, UNIT_HDR);
   var cfg = ensureSheet_(ss, SH_CONFIG, ['key', 'value']);
   if (cfg.getLastRow() < 2) {
     cfg.getRange(2, 1, 2, 2).setValues([['lokasi', '[]'], ['retensiFotoHari', '90']]);
@@ -57,6 +61,7 @@ function setup() {
   } else {
     created = 'Akun sudah ada (tidak diubah).';
   }
+  seedUnits_();
   setupTrigger();
   Logger.log('=== SETUP SELESAI ===');
   Logger.log(created);
@@ -441,7 +446,121 @@ function actCekDaftar_(p) {
   }
   return { status: null };
 }
-function actInfoPublik_() { var c = getConfig_(); return { waAdmin: c.waAdmin || '', ver: API_VERSION }; }
+/* ---------- master unit ---------- */
+function unitSheet_() { return ensureSheet_(SpreadsheetApp.getActiveSpreadsheet(), SH_UNIT, UNIT_HDR); }
+function seedUnits_() {
+  var sh = unitSheet_();
+  if (sh.getLastRow() >= 2) return;
+  var seen = {}, list = [];
+  var rows = readAll_(karSheet_());
+  for (var i = 0; i < rows.length; i++) { var n = String(rows[i].unit || '').trim(); if (n && !seen[n.toLowerCase()]) { seen[n.toLowerCase()] = 1; list.push(n); } }
+  if (!list.length) list.push('IT');
+  list.sort();
+  for (var j = 0; j < list.length; j++) sh.appendRow([list[j]]);
+  CacheService.getScriptCache().remove('UNITS');
+}
+function getUnits_() {
+  var cache = CacheService.getScriptCache();
+  var c = cache.get('UNITS');
+  if (c) return JSON.parse(c);
+  var sh = unitSheet_();
+  if (sh.getLastRow() < 2) seedUnits_();
+  var rows = readAll_(sh), out = [];
+  for (var i = 0; i < rows.length; i++) { var n = String(rows[i].nama || '').trim(); if (n) out.push(n); }
+  out.sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+  cache.put('UNITS', JSON.stringify(out), 600);
+  return out;
+}
+/** Nama unit baku (huruf besar/kecil mengikuti master) atau '' jika tidak ada di master. */
+function unitCanon_(name) {
+  var n = String(name || '').trim().toLowerCase(), list = getUnits_();
+  for (var i = 0; i < list.length; i++) if (list[i].toLowerCase() === n) return list[i];
+  return '';
+}
+function addUnit_(name) {
+  name = String(name || '').trim().substring(0, 60);
+  if (!name) return '';
+  var c = unitCanon_(name);
+  if (c) return c;
+  unitSheet_().appendRow([name]);
+  CacheService.getScriptCache().remove('UNITS');
+  return name;
+}
+function actUnitSave_(u, p) {
+  if (u.role !== 'admin') throw fail_('Hanya admin.');
+  var nama = String(p.nama || '').trim().substring(0, 60), lama = String(p.lama || '').trim();
+  if (!nama) throw fail_('Nama unit wajib diisi.');
+  var sh = unitSheet_(), rows = readAll_(sh);
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].nama).toLowerCase() === nama.toLowerCase() && String(rows[i].nama) !== lama) throw fail_('Unit sudah ada.');
+  }
+  if (!lama) { sh.appendRow([nama]); }
+  else {
+    var f = null;
+    for (var r = 0; r < rows.length; r++) if (rows[r].nama === lama) f = r + 2;
+    if (!f) throw fail_('Unit tidak ditemukan.');
+    sh.getRange(f, 1).setValue(nama);
+    if (nama !== lama) {
+      var ks = karSheet_(), kr = readAll_(ks), cache = CacheService.getScriptCache();
+      var col = KARYAWAN_HDR.indexOf('unit') + 1;
+      for (var k = 0; k < kr.length; k++) if (kr[k].unit === lama) { ks.getRange(k + 2, col).setValue(nama); cache.remove('U:' + kr[k].id); }
+    }
+  }
+  CacheService.getScriptCache().remove('UNITS');
+  return { ok: true, units: getUnits_() };
+}
+function actUnitHapus_(u, p) {
+  if (u.role !== 'admin') throw fail_('Hanya admin.');
+  var nama = String(p.nama || '').trim();
+  var kr = readAll_(karSheet_()), n = 0;
+  for (var k = 0; k < kr.length; k++) if (kr[k].unit === nama) n++;
+  if (n) throw fail_('Unit masih dipakai ' + n + ' karyawan. Pindahkan dulu karyawannya.');
+  var sh = unitSheet_(), rows = readAll_(sh);
+  for (var i = 0; i < rows.length; i++) if (rows[i].nama === nama) { sh.deleteRow(i + 2); break; }
+  CacheService.getScriptCache().remove('UNITS');
+  return { ok: true, units: getUnits_() };
+}
+/** Siapa yang sedang jaga (absen masuk belum pulang), dikelompokkan per unit. Boleh dilihat semua karyawan. */
+function actJaga_(u) {
+  var cache = CacheService.getScriptCache();
+  var c = cache.get('JAGA');
+  if (c) return JSON.parse(c);
+  var now = nowJ_(), k = periodKey_(now.substring(0, 10)), keys = [k, prevKey_(k)];
+  var latest = {};
+  for (var ki = 0; ki < keys.length; ki++) {
+    var sh = absenSheet_(keys[ki], false);
+    if (!sh) continue;
+    var tail = readTail_(sh, ABSEN_HDR, TAIL_ROWS);
+    for (var i = 0; i < tail.length; i++) {
+      var o = tail[i].o;
+      if (!isOpen_(o) || o.shift === 'L') continue;
+      if ((tsMs_(now) - tsMs_(o.serverMasuk)) / 3600000 > 20) continue;
+      if (!latest[o.userId] || latest[o.userId].serverMasuk < o.serverMasuk) latest[o.userId] = o;
+    }
+  }
+  var hpMap = {}, users = readAll_(karSheet_());
+  for (var j = 0; j < users.length; j++) hpMap[users[j].id] = { hp: users[j].hp || '', unit: users[j].unit, aktif: users[j].aktif };
+  var byUnit = {};
+  var units = getUnits_();
+  for (var q = 0; q < units.length; q++) byUnit[units[q]] = [];
+  for (var id in latest) {
+    var r = latest[id], inf = hpMap[id] || {};
+    if (inf.aktif && inf.aktif !== 'Y') continue;
+    var un = r.unit || inf.unit || '-';
+    if (!byUnit[un]) byUnit[un] = [];
+    byUnit[un].push({ userId: id, nama: r.nama, shift: r.shift, jamMasuk: r.jamMasuk, tanggal: r.tanggal, hp: inf.hp || '' });
+  }
+  var out = [];
+  for (var name in byUnit) {
+    byUnit[name].sort(function (a, b) { return a.nama < b.nama ? -1 : 1; });
+    out.push({ unit: name, orang: byUnit[name] });
+  }
+  out.sort(function (a, b) { return a.unit.toLowerCase() < b.unit.toLowerCase() ? -1 : 1; });
+  var res = { now: now, units: out };
+  cache.put('JAGA', JSON.stringify(res), 20);
+  return res;
+}
+function actInfoPublik_() { var c = getConfig_(); return { waAdmin: c.waAdmin || '', ver: API_VERSION, units: getUnits_() }; }
 function actSignup_(p) {
   var cache = CacheService.getScriptCache();
   var cnt = +(cache.get('SUN') || 0);
@@ -458,7 +577,10 @@ function actSignup_(p) {
   var hp = normWa_(p.hp).substring(0, 20);
   if (nama.length < 3) throw fail_('Nama minimal 3 huruf.');
   if (!nip) throw fail_('NIP wajib diisi.');
-  if (!unit) throw fail_('Unit wajib diisi.');
+  if (!unit) throw fail_('Unit wajib dipilih.');
+  var canon = unitCanon_(unit);
+  if (!canon) throw fail_('Unit tidak ada di daftar. Pilih unit dari daftar.');
+  unit = canon;
   if (!/^[a-z0-9._-]{3,30}$/.test(username)) throw fail_('Username 3-30 karakter (huruf kecil/angka).');
   if (pw.length < 6) throw fail_('Password minimal 6 karakter.');
   if (!validEmail_(email)) throw fail_('Format email tidak valid.');
@@ -530,7 +652,7 @@ function actApprove_(u, p) {
   if (p.approve) {
     var role = ['admin', 'atasan', 'karyawan'].indexOf(p.role) >= 0 ? p.role : 'karyawan';
     f.o.aktif = 'Y'; f.o.role = role;
-    if (p.unit) f.o.unit = String(p.unit).substring(0, 60);
+    if (p.unit) f.o.unit = addUnit_(p.unit) || f.o.unit;
     writeRow_(sh, KARYAWAN_HDR, f.row, f.o);
     CacheService.getScriptCache().remove('U:' + f.o.id);
     if (f.o.email) sendMail_(f.o.email, 'Akun disetujui - Absensi RSI At-Tin Husada', 'Halo ' + f.o.nama + ',\n\nPendaftaran Anda disetujui. Silakan login dengan username "' + f.o.username + '" dan password yang Anda buat saat mendaftar.\n\nAbsensi RSI At-Tin Husada Ngawi');
@@ -705,7 +827,7 @@ function actMasuk_(u, p) {
   var id = String(p.id || '');
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw fail_('ID absen tidak valid.');
   var shift = String(p.shift || '').toUpperCase();
-  if (SHIFTS.indexOf(shift) < 0) throw fail_('Pilih shift (P, S, M atau L).');
+  if (SHIFTS_PICK.indexOf(shift) < 0) throw fail_('Pilih shift (Pagi, Siang, Middle atau Malam).');
   if (!validJam_(p.jam)) throw fail_('Jam masuk tidak valid.');
   var now = nowJ_(), today = now.substring(0, 10), key = periodKey_(today);
   var sh = absenSheet_(key, true);
@@ -828,7 +950,7 @@ function actState_(u) {
   return {
     me: pubUserFull_(u), now: now, today: today, period: periodRange_(key),
     open: open ? pubRecord_(open.o) : null, todayRecords: recs, olderOpen: yRec,
-    laporan: lapTargets, lokasi: cfg.lokasi, defaultRadius: DEFAULT_RADIUS,
+    laporan: lapTargets, lokasi: cfg.lokasi, defaultRadius: DEFAULT_RADIUS, units: getUnits_(),
     counts: u.role === 'admin' ? adminCounts_() : null
   };
 }
@@ -837,7 +959,7 @@ function summarize_(rows, users) {
   var map = {}, order = [];
   function ensure(r) {
     if (!map[r.userId]) {
-      map[r.userId] = { userId: r.userId, nama: r.nama, unit: r.unit, hari: 0, menit: 0, P: 0, S: 0, M: 0, L: 0, cek: 0, belum: 0 };
+      map[r.userId] = { userId: r.userId, nama: r.nama, unit: r.unit, hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, L: 0, cek: 0, belum: 0 };
       order.push(r.userId);
     }
     return map[r.userId];
@@ -966,7 +1088,7 @@ function actKaryawanSave_(u, p) {
     var f = findRowById_(sh, KARYAWAN_HDR, d.id);
     if (!f) throw fail_('Karyawan tidak ditemukan.');
     if (f.o.id === u.id && (d.aktif === 'N' || role !== 'admin')) throw fail_('Tidak dapat menonaktifkan/menurunkan akun Anda sendiri.');
-    f.o.nip = String(d.nip || ''); f.o.nama = nama; f.o.unit = String(d.unit || ''); f.o.username = username;
+    f.o.nip = String(d.nip || ''); f.o.nama = nama; f.o.unit = addUnit_(d.unit); f.o.username = username;
     f.o.role = role; f.o.aktif = d.aktif === 'N' ? 'N' : 'Y';
     if (d.email !== undefined) { if (!validEmail_(String(d.email).trim())) throw fail_('Format email tidak valid.'); f.o.email = String(d.email).trim().toLowerCase(); }
     if (d.hp !== undefined) f.o.hp = normWa_(d.hp);
@@ -979,7 +1101,7 @@ function actKaryawanSave_(u, p) {
     return { ok: true };
   }
   var pw = String(d.password || d.nip || '123456');
-  saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: String(d.unit || ''), username: username, role: role, aktif: 'Y', email: validEmail_(String(d.email || '').trim()) ? String(d.email || '').trim().toLowerCase() : '', hp: normWa_(d.hp) }, pw, true);
+  saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: addUnit_(d.unit), username: username, role: role, aktif: 'Y', email: validEmail_(String(d.email || '').trim()) ? String(d.email || '').trim().toLowerCase() : '', hp: normWa_(d.hp) }, pw, true);
   return { ok: true, password: pw };
 }
 /** Impor massal: baris {nip,nama,unit,username,role,password}. Password awal default = NIP. */
@@ -998,7 +1120,7 @@ function actKaryawanImport_(u, p) {
     if (!nama || !/^[a-z0-9._-]{3,30}$/.test(un) || exist[un]) { skipped.push(un || nama || ('baris ' + (j + 1))); continue; }
     var pw = String(d.password || d.nip || '123456');
     var role = ['admin', 'atasan', 'karyawan'].indexOf(d.role) >= 0 ? d.role : 'karyawan';
-    saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: String(d.unit || ''), username: un, role: role, aktif: 'Y', email: validEmail_(String(d.email || '').trim()) ? String(d.email || '').trim().toLowerCase() : '', hp: normWa_(d.hp) }, pw, true);
+    saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: addUnit_(d.unit), username: un, role: role, aktif: 'Y', email: validEmail_(String(d.email || '').trim()) ? String(d.email || '').trim().toLowerCase() : '', hp: normWa_(d.hp) }, pw, true);
     exist[un] = true; made.push(un);
   }
   return { ok: true, dibuat: made.length, dilewati: skipped };
@@ -1066,6 +1188,7 @@ function doGet(e) {
         var lk = LockService.getScriptLock(); lk.waitLock(20000);
         try { return out_(actResetBuat_(u, p)); } finally { try { lk.releaseLock(); } catch (e3) { /* tidak terkunci */ } }
       case 'config': return out_(getConfig_());
+      case 'jaga': return out_(actJaga_(u));
       default: return out_({ error: 'Aksi tidak dikenal: ' + a });
     }
   } catch (err) {
@@ -1086,16 +1209,18 @@ function doPost(e) {
     var u = auth_(p.token);
     lock.waitLock(25000);
     switch (p.action) {
-      case 'masuk': r = actMasuk_(u, p); break;
-      case 'pulang': r = actPulang_(u, p); break;
+      case 'masuk': r = actMasuk_(u, p); CacheService.getScriptCache().remove('JAGA'); break;
+      case 'pulang': r = actPulang_(u, p); CacheService.getScriptCache().remove('JAGA'); break;
       case 'saveLaporan': r = actSaveLaporan_(u, p); break;
-      case 'koreksi': r = actKoreksi_(u, p); break;
+      case 'koreksi': r = actKoreksi_(u, p); CacheService.getScriptCache().remove('JAGA'); break;
       case 'saveConfig': r = actSaveConfig_(u, p); break;
       case 'karyawanSave': r = actKaryawanSave_(u, p); break;
       case 'karyawanImport': r = actKaryawanImport_(u, p); break;
       case 'karyawanApprove': r = actApprove_(u, p); break;
       case 'saveFotoProfil': r = actSaveFotoProfil_(u, p); break;
       case 'saveProfil': r = actSaveProfil_(u, p); break;
+      case 'unitSave': r = actUnitSave_(u, p); break;
+      case 'unitHapus': r = actUnitHapus_(u, p); break;
       default: r = { error: 'Aksi tidak dikenal: ' + p.action };
     }
     return out_(r);
