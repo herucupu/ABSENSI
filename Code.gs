@@ -19,7 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 5;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 6;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -899,6 +899,7 @@ function pubRecord_(o) {
     jamMasuk: o.jamMasuk, jamPulang: o.jamPulang, tglPulang: o.tglPulang,
     flag: o.flag, catatan: o.catatan, durasi: durMenit_(o),
     jarakMasuk: o.jarakMasuk, jarakPulang: o.jarakPulang,
+    latMasuk: o.latMasuk, lngMasuk: o.lngMasuk, latPulang: o.latPulang, lngPulang: o.lngPulang,
     fotoM: !!o.fotoMasuk && o.fotoMasuk !== 'dihapus', fotoP: !!o.fotoPulang && o.fotoPulang !== 'dihapus',
     fotoDihapus: o.fotoMasuk === 'dihapus' || o.fotoPulang === 'dihapus',
     open: isOpen_(o)

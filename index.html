@@ -190,6 +190,51 @@ td{padding:9px 6px;border-top:1px solid var(--line);} td.n,th.n{text-align:cente
 .err{display:none;background:#fff;color:#1b1f33;border:1px solid rgba(19,27,51,.14);border-left:5px solid var(--red);padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;margin-bottom:12px;font-weight:600;} .err.show{display:block;}
 .item,.sum-grid>div{box-shadow:0 12px 22px -14px rgba(19,40,90,.5),0 2px 5px -2px rgba(19,40,90,.14),0 1px 0 rgba(255,255,255,.95) inset;}
 .nav.glass,.topbar.glass{box-shadow:0 22px 40px -16px rgba(19,40,90,.55),0 6px 14px -6px rgba(19,40,90,.25),0 1px 0 rgba(255,255,255,.98) inset;}
+/* ---------- panel lebih timbul & berwarna ---------- */
+.glass.card{position:relative;border:1.5px solid rgba(255,255,255,.95);
+  box-shadow:0 28px 46px -22px rgba(19,40,90,.55),0 10px 18px -10px rgba(19,40,90,.26),0 0 0 1px rgba(30,80,170,.10),0 1px 0 rgba(255,255,255,1) inset,0 -2px 6px rgba(255,255,255,.35) inset;}
+.glass.card::before{content:"";position:absolute;left:18px;right:18px;top:0;height:3px;border-radius:0 0 6px 6px;background:linear-gradient(90deg,var(--blue-2),var(--teal-2));opacity:.8;pointer-events:none;}
+.page .glass.card:nth-of-type(3n+2)::before{background:linear-gradient(90deg,var(--teal),#7ee7c1);}
+.page .glass.card:nth-of-type(3n+3)::before{background:linear-gradient(90deg,var(--violet),#b9a3f7);}
+.card h3{padding-top:2px;}
+/* ---------- tombol Masuk / Pulang ---------- */
+.act-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.act-tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:150px;padding:16px 10px 14px;border-radius:26px;cursor:pointer;text-align:center;border:1.5px solid rgba(255,255,255,.95);color:var(--ink);font-family:inherit;overflow:hidden;
+  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);transition:transform .15s,box-shadow .15s,opacity .2s;}
+.act-tile::after{content:"";position:absolute;left:-10%;right:-10%;top:-45%;height:80%;background:radial-gradient(closest-side,rgba(255,255,255,.75),transparent);pointer-events:none;}
+.act-tile > *{position:relative;z-index:1;}
+.act-tile b{font-family:'Space Grotesk',sans-serif;font-size:18px;line-height:1.15;}
+.act-tile small{font-size:12px;line-height:1.35;color:#3b4863;max-width:15ch;}
+.act-ic{width:56px;height:56px;border-radius:20px;display:grid;place-items:center;color:#fff;margin-bottom:4px;box-shadow:0 14px 20px -10px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.55) inset;}
+.act-ic svg{width:28px;height:28px;}
+.act-in{background:linear-gradient(150deg,rgba(214,252,232,.95),rgba(150,236,200,.55));box-shadow:0 26px 40px -20px rgba(8,130,90,.65),0 8px 14px -8px rgba(8,100,70,.35),0 1px 0 #fff inset;}
+.act-in .act-ic{background:linear-gradient(145deg,#2fe0a4,#0b9d6e);}
+.act-out{background:linear-gradient(150deg,rgba(214,232,255,.95),rgba(150,190,250,.55));box-shadow:0 26px 40px -20px rgba(20,88,176,.7),0 8px 14px -8px rgba(20,60,150,.35),0 1px 0 #fff inset;}
+.act-out .act-ic{background:linear-gradient(145deg,#4c9bf0,#1458b0);}
+.act-tile:not(:disabled):active{transform:translateY(2px) scale(.985);}
+.act-tile:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.55);}
+.act-hint{grid-column:1/-1;text-align:center;font-size:12.5px;color:#34405c;margin-top:-2px;}
+/* ---------- kartu absensi hari ini ---------- */
+.att{padding:14px;border-radius:20px;background:linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.55));border:1.5px solid #fff;box-shadow:0 16px 26px -16px rgba(19,40,90,.5),0 2px 6px -2px rgba(19,40,90,.14),0 1px 0 #fff inset;margin-bottom:12px;}
+.att:last-child{margin-bottom:0;}
+.att-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.att-day{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;line-height:1.1;} .att-date{font-size:13px;color:var(--dim);margin-top:2px;}
+.att-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#E6EBF5;color:#34405c;}
+.pill.work{background:#DDF7EA;color:#0a7a50;} .pill.work::before{content:"";width:8px;height:8px;border-radius:50%;background:#1FBF86;box-shadow:0 0 0 0 rgba(31,191,134,.6);animation:pulse 1.6s infinite;}
+.pill.warn{background:#FFF1D6;color:#8a5200;}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(31,191,134,0)}100%{box-shadow:0 0 0 0 rgba(31,191,134,0)}}
+.att-times{display:grid;grid-template-columns:1fr auto 1fr 1fr;align-items:center;gap:6px;margin:12px 0;padding:10px;border-radius:16px;background:rgba(19,40,90,.05);border:1px solid rgba(255,255,255,.8);}
+.att-times small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);} .att-times b{font-family:'IBM Plex Mono',monospace;font-size:16px;}
+.att-times .arr{color:var(--dim);font-size:16px;}
+.att-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.att-ph{position:relative;height:clamp(110px,30vw,170px);border-radius:16px;border:1.5px solid #fff;background:linear-gradient(145deg,#e4ecf8,#cfdbef) center/cover no-repeat;display:flex;align-items:flex-end;justify-content:flex-start;overflow:hidden;cursor:pointer;padding:0;box-shadow:0 10px 16px -10px rgba(19,40,90,.5);color:#fff;font-weight:700;font-size:12px;}
+.att-ph span{display:block;width:100%;padding:16px 8px 6px;background:linear-gradient(0deg,rgba(6,24,62,.7),transparent);text-align:left;}
+.att-ph.empty-ph{cursor:default;color:var(--dim);align-items:center;justify-content:center;font-weight:600;}
+.att-loc{font-size:13px;line-height:1.5;display:grid;gap:4px;}
+.att-loc .l{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-radius:12px;background:rgba(14,163,157,.08);border:1px solid rgba(255,255,255,.8);}
+.att-loc a{color:var(--blue);font-weight:700;text-decoration:none;white-space:nowrap;}
+@media (min-width:700px){.act-tile{min-height:170px;}}
 body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
 </style>
@@ -246,9 +291,13 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
         </div>
       </div>
       <div id="olderBanner"></div>
-      <div id="absenAction" style="margin-bottom:14px"></div>
+      <div class="act-grid" id="absenAction">
+        <button class="act-tile act-in" id="btnMasuk"><span class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><b>Absen Masuk</b><small id="tlMasuk">Klik untuk absen saat datang kerja</small></button>
+        <button class="act-tile act-out" id="btnPulang"><span class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><b>Absen Pulang</b><small id="tlPulang">Klik untuk absen saat selesai kerja</small></button>
+        <div class="act-hint" id="actHint"></div>
+      </div>
+      <div class="glass card"><h3>🕘 Absensi Hari Ini <span class="small dim" id="tdDate" style="font-weight:500"></span></h3><div id="todayList"></div></div>
       <div class="glass card"><h3>📝 Laporan Harian</h3><div id="homeLaporan"></div></div>
-      <div class="glass card"><h3>🕘 Absen Hari Ini</h3><div id="todayList"></div></div>
     </section>
 
     <!-- JAGA SEKARANG -->
@@ -380,7 +429,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 /* ============================================================
    KONFIGURASI — isi dengan URL Web App Apps Script Anda
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbyx0ytnNzGyfUQ_dlaA_P3qCJvIooGkazy1zdbfonunk2cVN7rAYsDkA-H28l8Fw8jk/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw3Kg-RFedKHIWRv5mzNoNRPFUruLcxdze2ZYdOo2Wvy0bby1y_aRVHA-mEA2L1NEa5/exec";
 
 /* ---------------- util ---------------- */
 const $ = (id) => document.getElementById(id);
@@ -415,7 +464,7 @@ function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classNam
 /* ---------------- API ---------------- */
 const API_READY = API_URL && API_URL.indexOf('PASTE_URL') < 0;
 let pubInfo = { waAdmin: '' };
-const NEED_VER = 5;
+const NEED_VER = 6;
 async function loadPubInfo() {
   if (!API_READY) return;
   try { pubInfo = await apiGet('infoPublik', { token: '' }); if (!pubInfo.ver || pubInfo.ver < NEED_VER) $('verWarn').classList.remove('hidden'); }
@@ -594,30 +643,56 @@ function renderHome() {
   $('hDur').textContent = last ? (last.durasi != null ? fmtDur(last.durasi) : '…') : '—';
   $('olderBanner').innerHTML = open && open.tanggal !== S.today
     ? `<div class="banner red">⚠ Absen Masuk tanggal <b>${fmtDate(open.tanggal)}</b> belum Pulang. Silakan absen Pulang di bawah.</div>` : '';
-  const a = $('absenAction');
-  if (open) {
-    a.innerHTML = `<button class="btn btn-amber big-btn" id="btnPulang">🏁 Absen Pulang<small>Shift ${esc(open.shift)} · masuk ${esc(open.jamMasuk)}</small></button>`;
-    $('btnPulang').addEventListener('click', () => openAbsen('pulang'));
-  } else if (recs.length) {
-    a.innerHTML = `<div class="banner blue" style="text-align:center">✅ Absen hari ini sudah lengkap. Terima kasih!</div><button class="btn btn-block" id="btnMasuk2">Absen Masuk lagi (shift berikutnya)</button>`;
-    $('btnMasuk2').addEventListener('click', () => openAbsen('masuk'));
-  } else {
-    a.innerHTML = `<button class="btn btn-teal big-btn" id="btnMasuk">▶ Absen Masuk<small>Pilih shift, ambil foto, lokasi otomatis</small></button>`;
-    $('btnMasuk').addEventListener('click', () => openAbsen('masuk'));
-  }
+  $('btnMasuk').disabled = !!open; $('btnPulang').disabled = !open;
+  $('tlMasuk').textContent = open ? 'Sudah masuk pukul ' + open.jamMasuk : 'Klik untuk absen saat datang kerja';
+  $('tlPulang').textContent = open ? 'Klik untuk absen saat selesai kerja' : 'Absen masuk dulu';
+  $('actHint').textContent = open ? 'Shift ' + (SHIFT_NAME[open.shift] || open.shift) + ' · masuk ' + open.jamMasuk + '. Jangan lupa absen pulang.' : (recs.length ? '✅ Absen hari ini sudah lengkap. Bila ada shift berikutnya, silakan absen masuk lagi.' : 'Belum absen hari ini. Ayo lakukan absen sekarang.');
   const tg = []; const addT = (r) => { if (r && !tg.some((x) => x.d === r.tanggal && x.s === r.shift)) tg.push({ d: r.tanggal, s: r.shift }); };
   addT(S.olderOpen); addT(S.open); recs.forEach(addT);
   $('homeLaporan').innerHTML = tg.length ? tg.map((x) => { const t = lapFor(S.laporan, x.d, x.s); return `<div style="margin-bottom:10px"><div class="row between"><div class="small dim"><span class="tag tag-${esc(x.s)}">${esc(SHIFT_NAME[x.s] || x.s)}</span> ${fmtDate(x.d)}</div><button class="btn btn-sm ${t ? '' : 'btn-teal'}" data-lp="${esc(x.d)}|${esc(x.s)}">${t ? '✎ Ubah' : 'Isi laporan'}</button></div>${t ? '<div class="lap-text">' + esc(t) + '</div>' : '<div class="dim small" style="margin-top:4px">Laporan shift ini belum diisi.</div>'}</div>`; }).join('')
     : `<div class="dim small" style="margin-bottom:10px">Belum ada absen hari ini. Laporan diisi per tanggal dan shift.</div><button class="btn btn-teal btn-sm" data-lp="">Isi laporan</button>`;
   $('homeLaporan').querySelectorAll('[data-lp]').forEach((b) => b.addEventListener('click', () => { const p = b.dataset.lp.split('|'); lapPreset = p[0] ? { d: p[0], s: p[1] } : null; go('laporan'); }));
-  $('todayList').innerHTML = recs.length ? recs.map(recItem).join('') : '<div class="empty">Belum ada absen hari ini.</div>';
-  bindRecButtons($('todayList'));
+  const list = (S.olderOpen ? [S.olderOpen] : []).concat(recs.slice().sort((x, y) => (x.tanggal + x.jamMasuk < y.tanggal + y.jamMasuk ? 1 : -1)));
+  $('tdDate').textContent = '· ' + fmtDateFull(S.today);
+  $('todayList').innerHTML = list.length ? list.map(attCard).join('') : '<div class="empty">🗓️<br>Belum ada absen hari ini.</div>';
+  bindRecButtons($('todayList')); loadThumbs($('todayList'));
   tick();
 }
 function updateDur() {
   const o = S.open; if (!o) return;
   const n = nowJ(); const d = n.min - utcMin(o.tanggal, o.jamMasuk);
   $('hDur').textContent = d >= 0 ? fmtDur(d) : '—';
+}
+function fmtDateFull(d) { const p = d.split('-'); const dt = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); return DAYS[dt.getUTCDay()] + ', ' + (+p[2]) + ' ' + MONTHS[+p[1] - 1] + ' ' + p[0]; }
+$('btnMasuk').addEventListener('click', () => openAbsen('masuk')); $('btnPulang').addEventListener('click', () => openAbsen('pulang'));
+const thumbCache = {};
+function geoLine(label, lat, lng, jarak, flag) {
+  const has = lat !== '' && lat != null && lng !== '' && lng != null && !isNaN(+lat);
+  if (!has) return `<div class="l"><span>📍</span><span><b>${label}:</b> koordinat GPS tidak tersedia</span></div>`;
+  const la = (+lat).toFixed(5), ln = (+lng).toFixed(5);
+  return `<div class="l"><span>📍</span><span style="flex:1"><b>${label}:</b> ${la}, ${ln}${jarak !== '' && jarak != null ? ' · ' + esc(jarak) + ' m dari titik' : ''}</span><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${la},${ln}">Peta</a></div>`;
+}
+function attCard(r) {
+  const dayDate = fmtDateFull(r.tanggal).split(', ');
+  const work = r.open, st = r.jamPulang ? `<span class="pill">✔ Selesai · ${fmtDur(r.durasi)}</span>` : (work ? '<span class="pill work">Sedang bekerja</span>' : '<span class="pill warn">Belum pulang</span>');
+  const ph = (which, ok, label) => ok ? `<button class="att-ph" data-foto="${which}" data-th="${which}"><span>📷 ${label}</span></button>` : `<div class="att-ph empty-ph">${r.fotoDihapus ? 'Foto dihapus otomatis' : (which === 'pulang' && !r.jamPulang ? 'Belum pulang' : 'Tanpa foto')}</div>`;
+  return `<div class="item att" data-id="${esc(r.id)}" data-tgl="${esc(r.tanggal)}">
+    <div class="att-top"><div><div class="att-day">${esc(dayDate[0])}</div><div class="att-date">${esc(dayDate[1])}</div></div>
+      <div class="att-right"><span class="tag tag-${esc(r.shift)}">${esc(SHIFT_NAME[r.shift] || r.shift)}</span>${st}</div></div>
+    <div class="att-times"><div><small>Masuk</small><b>${esc(r.jamMasuk)}</b></div><div class="arr">→</div><div><small>Pulang</small><b>${r.jamPulang ? esc(r.jamPulang) : '—'}</b></div><div><small>Durasi</small><b>${r.durasi != null ? fmtDur(r.durasi) : '…'}</b></div></div>
+    <div class="att-photos">${ph('masuk', r.fotoM, 'Masuk')}${ph('pulang', r.fotoP, 'Pulang')}</div>
+    <div class="att-loc">${geoLine('Masuk', r.latMasuk, r.lngMasuk, r.jarakMasuk)}${r.jamPulang || r.fotoP ? geoLine('Pulang', r.latPulang, r.lngPulang, r.jarakPulang) : ''}</div>
+    <div style="margin-top:8px">${flagHtml(r)}</div>${r.catatan ? `<div class="small" style="margin-top:4px">📌 ${esc(r.catatan)}</div>` : ''}</div>`;
+}
+async function loadThumbs(root) {
+  const btns = Array.from(root.querySelectorAll('[data-th]'));
+  for (const b of btns) {
+    const it = b.closest('.item'), key = it.dataset.id + b.dataset.th;
+    try {
+      if (!thumbCache[key]) { const r = await apiGet('foto', { id: it.dataset.id, tanggal: it.dataset.tgl, which: b.dataset.th }); thumbCache[key] = r.dataUrl; }
+      b.style.backgroundImage = 'url(' + thumbCache[key] + ')';
+    } catch (e) { if (e.message === 'Sesi berakhir') return; }
+  }
 }
 function recItem(r, showName) {
   return `<div class="item" data-id="${esc(r.id)}" data-tgl="${esc(r.tanggal)}">
@@ -811,9 +886,9 @@ $('btnSaveLaporan').addEventListener('click', async () => {
   try {
     const k = periodKeyOf(tgl);
     const r = await sendAndConfirm('saveLaporan', { tanggal: tgl, shift, isi }, () => apiGet('riwayat', { period: k }), (d) => (d.laporan[me.id + '_' + tgl + '_' + shift] || '').trim() === isi.slice(0, 4000));
-    if (r) { toast('✅ Laporan tersimpan'); await loadState(); renderHome(); await loadLapHistory(); fillShiftSel(shift); fillLap(); } else toast(NOT_CONFIRMED, true);
+    if (r) { toast('✅ Laporan tersimpan'); await loadState(); renderHome(); const same = $('lpDate').value === tgl && $('lpShift').value === shift; await loadLapHistory(); if (same && $('lpDate').value === tgl && $('lpShift').value === shift) { fillShiftSel(shift); fillLap(); } else { fillShiftSel($('lpShift').value); } } else toast(NOT_CONFIRMED, true);
   } catch (e) { toast(e.message, true); }
-  b.disabled = false; fillLap();
+  b.disabled = false; $('btnSaveLaporan').textContent = lapMap[$('lpDate').value + '_' + $('lpShift').value] ? 'Perbarui Laporan' : 'Simpan Laporan';
 });
 
 /* ---------------- RIWAYAT ---------------- */
