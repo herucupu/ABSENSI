@@ -12,7 +12,15 @@ var SH_KARYAWAN = 'Karyawan';
 var SH_CONFIG = 'Config';
 var PFX_ABSEN = 'Absensi_';
 var PFX_LAPOR = 'Laporan_';
-var KARYAWAN_HDR = ['id', 'nip', 'nama', 'unit', 'username', 'salt', 'hash', 'role', 'aktif', 'wajibGanti', 'createdAt'];
+var KARYAWAN_HDR = ['id', 'nip', 'nama', 'unit', 'username', 'salt', 'hash', 'role', 'aktif', 'wajibGanti', 'createdAt',
+  'email', 'hp', 'tempHash', 'tempExp', 'regId'];
+var SH_FOTO = 'FotoProfil';
+var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
+var SH_RESET = 'ResetReq';
+var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
+var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
+var TEMP_PW_MENIT_EMAIL = 60;
+var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
   'fotoMasuk', 'fotoPulang', 'latMasuk', 'lngMasuk', 'latPulang', 'lngPulang', 'jarakMasuk', 'jarakPulang',
   'flag', 'serverMasuk', 'serverPulang', 'catatan', 'pulangId'];
@@ -30,13 +38,16 @@ var TAIL_ROWS = 1800;            // baris terakhir yang dipindai untuk absen ter
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   ensureSheet_(ss, SH_KARYAWAN, KARYAWAN_HDR);
+  ensureColumns_(ss.getSheetByName(SH_KARYAWAN), KARYAWAN_HDR);
+  ensureSheet_(ss, SH_FOTO, FOTO_HDR);
+  ensureSheet_(ss, SH_RESET, RESET_HDR);
   var cfg = ensureSheet_(ss, SH_CONFIG, ['key', 'value']);
   if (cfg.getLastRow() < 2) {
     cfg.getRange(2, 1, 2, 2).setValues([['lokasi', '[]'], ['retensiFotoHari', '90']]);
   }
   ensureSecret_();
   ensureFolder_();
-  var sh = ss.getSheetByName(SH_KARYAWAN);
+  var sh = karSheet_();
   var created = '';
   if (sh.getLastRow() < 2) {
     var pw = randomPw_();
@@ -50,10 +61,11 @@ function setup() {
   Logger.log(created);
   Logger.log('Sekarang: Deploy > New deployment > Web app (Execute as: Me, Access: Anyone).');
   Logger.log('Buka juga menu Pengaturan di aplikasi untuk mengisi titik lokasi RS.');
+  Logger.log('CATATAN: versi ini bisa mengirim email (password sementara). Izinkan akses Gmail/Mail bila diminta.');
 }
 
 function resetPasswordAdmin() {
-  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN);
+  var sh = karSheet_();
   var rows = readAll_(sh);
   for (var i = 0; i < rows.length; i++) {
     if (rows[i].username === 'admin') {
@@ -112,6 +124,66 @@ function subFolder_(key) {
   var root = ensureFolder_();
   var it = root.getFoldersByName(key);
   return it.hasNext() ? it.next() : root.createFolder(key);
+}
+var KAR_CHECKED_ = false;
+function ensureColumns_(sh, hdr) {
+  var last = sh.getLastColumn();
+  var cur = last > 0 ? sh.getRange(1, 1, 1, last).getValues()[0] : [];
+  var have = {};
+  for (var i = 0; i < cur.length; i++) have[str_(cur[i])] = true;
+  for (var j = 0; j < hdr.length; j++) {
+    if (!have[hdr[j]]) {
+      last++;
+      sh.getRange(1, last).setNumberFormat('@').setValue(hdr[j]).setFontWeight('bold').setBackground('#DCE8FA');
+    }
+  }
+}
+function karSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SH_KARYAWAN);
+  if (!sh) throw fail_('Backend belum disiapkan. Jalankan fungsi setup() di Apps Script.');
+  if (!KAR_CHECKED_) { ensureColumns_(sh, KARYAWAN_HDR); KAR_CHECKED_ = true; }
+  return sh;
+}
+function fotoSheet_() { return ensureSheet_(SpreadsheetApp.getActiveSpreadsheet(), SH_FOTO, FOTO_HDR); }
+function resetSheet_() { return ensureSheet_(SpreadsheetApp.getActiveSpreadsheet(), SH_RESET, RESET_HDR); }
+function fotoOf_(userId) {
+  var cache = CacheService.getScriptCache();
+  var c = cache.get('P:' + userId);
+  if (c !== null && c !== undefined) return c;
+  var f = findRowById_(fotoSheet_(), FOTO_HDR, userId);
+  var v = f ? f.o.foto : '';
+  if (v && v.length < 90000) cache.put('P:' + userId, v, 3600);
+  return v;
+}
+function setFoto_(userId, dataUrl) {
+  var sh = fotoSheet_();
+  var f = findRowById_(sh, FOTO_HDR, userId);
+  var o = { userId: userId, foto: dataUrl, updatedAt: nowJ_() };
+  if (f) writeRow_(sh, FOTO_HDR, f.row, o); else appendObj_(sh, FOTO_HDR, o);
+  CacheService.getScriptCache().remove('P:' + userId);
+}
+function validFotoProfil_(v) {
+  v = String(v || '');
+  return /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(v) && v.length <= MAX_FOTO_PROFIL;
+}
+function validEmail_(e) { return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function normWa_(v) {
+  var d = String(v || '').replace(/[^0-9]/g, '');
+  if (!d) return '';
+  if (d.charAt(0) === '0') d = '62' + d.substring(1);
+  return d;
+}
+function sendMail_(to, subject, body) {
+  try { MailApp.sendEmail({ to: to, subject: subject, body: body, name: 'Absensi RSI At-Tin Husada' }); return true; }
+  catch (e) { return false; }
+}
+function plusMinutesTs_(min) { return Utilities.formatDate(new Date(Date.now() + min * 60000), TZ, 'yyyy-MM-dd HH:mm:ss'); }
+function randomTempPw_() {
+  var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  var s = '';
+  for (var i = 0; i < 8; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+  return s;
 }
 function randomSalt_() { return Utilities.getUuid().replace(/-/g, '').substring(0, 16); }
 function randomPw_() {
@@ -249,19 +321,30 @@ function saveKaryawanRow_(sh, d, pw, wajibGanti) {
     id: Utilities.getUuid().replace(/-/g, '').substring(0, 12),
     nip: d.nip || '', nama: d.nama, unit: d.unit || '', username: String(d.username).toLowerCase(),
     salt: salt, hash: hash_(salt, pw), role: d.role || 'karyawan', aktif: d.aktif || 'Y',
-    wajibGanti: wajibGanti ? 'Y' : 'N', createdAt: nowJ_()
+    wajibGanti: wajibGanti ? 'Y' : 'N', createdAt: nowJ_(),
+    email: d.email || '', hp: d.hp || '', tempHash: '', tempExp: '', regId: d.regId || ''
   };
   appendObj_(sh, KARYAWAN_HDR, o);
   return o;
 }
 function pubUser_(u) {
-  return { id: u.id, nip: u.nip, nama: u.nama, unit: u.unit, username: u.username, role: u.role, wajibGanti: u.wajibGanti === 'Y' };
+  return { id: u.id, nip: u.nip, nama: u.nama, unit: u.unit, username: u.username, role: u.role, wajibGanti: u.wajibGanti === 'Y', email: u.email || '', hp: u.hp || '' };
+}
+function pubUserFull_(u) { var x = pubUser_(u); x.foto = fotoOf_(u.id); return x; }
+function adminCounts_() {
+  var pend = 0;
+  var rows = readAll_(karSheet_());
+  for (var i = 0; i < rows.length; i++) if (rows[i].aktif === 'P') pend++;
+  var rs = resetSheet_(), rst = 0;
+  var rr = readAll_(rs);
+  for (var j = 0; j < rr.length; j++) if (rr[j].status === 'baru') rst++;
+  return { pending: pend, reset: rst };
 }
 function getUserById_(id) {
   var cache = CacheService.getScriptCache();
   var c = cache.get('U:' + id);
   if (c) return JSON.parse(c);
-  var rows = readAll_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN));
+  var rows = readAll_(karSheet_());
   for (var i = 0; i < rows.length; i++) {
     if (rows[i].id === id) {
       cache.put('U:' + id, JSON.stringify(rows[i]), 300);
@@ -292,6 +375,9 @@ function auth_(token) {
 function isManager_(u) { return u.role === 'admin' || u.role === 'atasan'; }
 function canSee_(viewer, unit) { return viewer.role === 'admin' || (viewer.role === 'atasan' && viewer.unit === unit); }
 
+function tempOk_(u, pw) {
+  return !!(u.tempHash && u.tempExp && hash_(u.salt, pw) === u.tempHash && tsMs_(u.tempExp) > Date.now());
+}
 function actLogin_(p) {
   var username = String(p.username || '').trim().toLowerCase();
   var pw = String(p.password || '');
@@ -300,37 +386,210 @@ function actLogin_(p) {
   var fk = 'F:' + username;
   var fails = +(cache.get(fk) || 0);
   if (fails >= 5) throw fail_('Terlalu banyak percobaan gagal. Coba lagi dalam 10 menit.');
-  var rows = readAll_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN));
+  var sh = karSheet_();
+  var rows = readAll_(sh);
   var u = null;
   for (var i = 0; i < rows.length; i++) if (rows[i].username === username) { u = rows[i]; break; }
-  if (!u || u.aktif !== 'Y' || hash_(u.salt, pw) !== u.hash) {
+  var pwOk = !!u && hash_(u.salt, pw) === u.hash;
+  var tmpOk = !!u && !pwOk && tempOk_(u, pw);
+  if (!u || (u.aktif !== 'Y' && u.aktif !== 'P') || !(pwOk || tmpOk)) {
     cache.put(fk, String(fails + 1), 600);
     throw fail_('Username atau password salah.');
   }
   cache.remove(fk);
+  if (u.aktif === 'P') throw fail_('Pendaftaran Anda masih menunggu persetujuan admin. Silakan coba lagi nanti.');
+  if (tmpOk) {
+    var f = findRowById_(sh, KARYAWAN_HDR, u.id);
+    if (f) { f.o.wajibGanti = 'Y'; writeRow_(sh, KARYAWAN_HDR, f.row, f.o); u.wajibGanti = 'Y'; }
+    cache.remove('U:' + u.id);
+  }
   var hours = String(p.remember) === '1' ? SESSION_HOURS_REMEMBER : SESSION_HOURS;
-  return { token: makeToken_(u.id, hours), user: pubUser_(u) };
+  return { token: makeToken_(u.id, hours), user: pubUserFull_(u) };
 }
 function actChangePassword_(u, p) {
   var oldPw = String(p.oldPassword || ''), nw = String(p.newPassword || '');
   if (nw.length < 6) throw fail_('Password baru minimal 6 karakter.');
-  if (hash_(u.salt, oldPw) !== u.hash) throw fail_('Password lama salah.');
-  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN);
+  if (hash_(u.salt, oldPw) !== u.hash && !tempOk_(u, oldPw)) throw fail_('Password lama salah.');
+  var sh = karSheet_();
   var f = findRowById_(sh, KARYAWAN_HDR, u.id);
   var salt = randomSalt_();
-  f.o.salt = salt; f.o.hash = hash_(salt, nw); f.o.wajibGanti = 'N';
+  f.o.salt = salt; f.o.hash = hash_(salt, nw); f.o.wajibGanti = 'N'; f.o.tempHash = ''; f.o.tempExp = '';
   writeRow_(sh, KARYAWAN_HDR, f.row, f.o);
   CacheService.getScriptCache().remove('U:' + u.id);
   return { ok: true };
 }
 
+/* ---------- pendaftaran mandiri (publik) ---------- */
+function actCekUsername_(p) {
+  var un = String(p.username || '').trim().toLowerCase();
+  var nip = String(p.nip || '').trim().toLowerCase();
+  var rows = readAll_(karSheet_());
+  var userTaken = false, nipTaken = false;
+  for (var i = 0; i < rows.length; i++) {
+    if (un && rows[i].username === un) userTaken = true;
+    if (nip && rows[i].nip && rows[i].nip.toLowerCase() === nip) nipTaken = true;
+  }
+  return { userTaken: userTaken, nipTaken: nipTaken };
+}
+function actCekDaftar_(p) {
+  var id = String(p.regId || '');
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) return { status: null };
+  var rows = readAll_(karSheet_());
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].regId === id) return { status: rows[i].aktif === 'P' ? 'menunggu' : (rows[i].aktif === 'Y' ? 'aktif' : 'nonaktif') };
+  }
+  return { status: null };
+}
+function actInfoPublik_() { var c = getConfig_(); return { waAdmin: c.waAdmin || '' }; }
+function actSignup_(p) {
+  var cache = CacheService.getScriptCache();
+  var cnt = +(cache.get('SUN') || 0);
+  if (cnt >= 60) throw fail_('Terlalu banyak pendaftaran. Coba lagi nanti.');
+  cache.put('SUN', String(cnt + 1), 3600);
+  var regId = String(p.regId || '');
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(regId)) throw fail_('ID pendaftaran tidak valid.');
+  var nama = String(p.nama || '').trim().substring(0, 80);
+  var nip = String(p.nip || '').trim().substring(0, 30);
+  var unit = String(p.unit || '').trim().substring(0, 60);
+  var username = String(p.username || '').trim().toLowerCase();
+  var pw = String(p.password || '');
+  var email = String(p.email || '').trim().toLowerCase().substring(0, 100);
+  var hp = normWa_(p.hp).substring(0, 20);
+  if (nama.length < 3) throw fail_('Nama minimal 3 huruf.');
+  if (!nip) throw fail_('NIP wajib diisi.');
+  if (!unit) throw fail_('Unit wajib diisi.');
+  if (!/^[a-z0-9._-]{3,30}$/.test(username)) throw fail_('Username 3-30 karakter (huruf kecil/angka).');
+  if (pw.length < 6) throw fail_('Password minimal 6 karakter.');
+  if (!validEmail_(email)) throw fail_('Format email tidak valid.');
+  if (!validFotoProfil_(p.foto)) throw fail_('Foto profil wajib (JPEG kecil).');
+  var sh = karSheet_();
+  var rows = readAll_(sh);
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].regId === regId) return { ok: true, duplicate: true };
+    if (rows[i].username === username) throw fail_('Username sudah dipakai.');
+    if (rows[i].nip && rows[i].nip.toLowerCase() === nip.toLowerCase()) throw fail_('NIP sudah terdaftar.');
+  }
+  var o = saveKaryawanRow_(sh, { nip: nip, nama: nama, unit: unit, username: username, role: 'karyawan', aktif: 'P', email: email, hp: hp, regId: regId }, pw, false);
+  setFoto_(o.id, String(p.foto));
+  return { ok: true };
+}
+
+/* ---------- lupa password ---------- */
+function actLupa_(p) {
+  var username = String(p.username || '').trim().toLowerCase();
+  var nip = String(p.nip || '').trim().toLowerCase();
+  if (!username || !nip) throw fail_('Isi username dan NIP.');
+  var cache = CacheService.getScriptCache();
+  var rk = 'RS:' + username;
+  var n = +(cache.get(rk) || 0);
+  if (n >= 3) throw fail_('Terlalu sering meminta reset. Coba lagi dalam beberapa jam atau hubungi admin.');
+  cache.put(rk, String(n + 1), 21600);
+  var sh = karSheet_();
+  var rows = readAll_(sh), u = null;
+  for (var i = 0; i < rows.length; i++) if (rows[i].username === username) { u = rows[i]; break; }
+  // jawaban selalu sama agar tidak membocorkan akun mana yang ada
+  if (!u || u.aktif !== 'Y' || !u.nip || u.nip.toLowerCase() !== nip) return { ok: true };
+  var tmp = randomTempPw_();
+  var f = findRowById_(sh, KARYAWAN_HDR, u.id);
+  var viaEmail = false;
+  if (u.email) {
+    f.o.tempHash = hash_(u.salt, tmp); f.o.tempExp = plusMinutesTs_(TEMP_PW_MENIT_EMAIL);
+    writeRow_(sh, KARYAWAN_HDR, f.row, f.o); cache.remove('U:' + u.id);
+    viaEmail = sendMail_(u.email, 'Password sementara - Absensi RSI At-Tin Husada',
+      'Halo ' + u.nama + ',\n\nPermintaan reset password diterima.\n\nUsername: ' + u.username + '\nPassword sementara: ' + tmp +
+      '\nBerlaku ' + TEMP_PW_MENIT_EMAIL + ' menit.\n\nLogin dengan password sementara ini, lalu Anda akan diminta membuat password baru.\n' +
+      'Password lama Anda tetap berlaku sampai Anda login dengan password sementara. Jika bukan Anda yang meminta, abaikan email ini.\n\nAbsensi RSI At-Tin Husada Ngawi');
+    if (!viaEmail) { f.o.tempHash = ''; f.o.tempExp = ''; writeRow_(sh, KARYAWAN_HDR, f.row, f.o); cache.remove('U:' + u.id); }
+  }
+  if (!viaEmail) {
+    var rs = resetSheet_();
+    var all = readAll_(rs);
+    for (var k = 0; k < all.length; k++) if (all[k].userId === u.id && all[k].status === 'baru') return { ok: true };
+    appendObj_(rs, RESET_HDR, { id: Utilities.getUuid().replace(/-/g, '').substring(0, 12), userId: u.id, username: u.username, nama: u.nama, unit: u.unit, createdAt: nowJ_(), status: 'baru' });
+  }
+  return { ok: true };
+}
+
+/* ---------- admin: persetujuan & reset ---------- */
+function actPendingList_(u) {
+  if (u.role !== 'admin') throw fail_('Hanya admin.');
+  var rows = readAll_(karSheet_()), out = [];
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].aktif !== 'P') continue;
+    var r = rows[i];
+    out.push({ id: r.id, nama: r.nama, nip: r.nip, unit: r.unit, username: r.username, email: r.email, hp: r.hp, createdAt: r.createdAt, foto: fotoOf_(r.id) });
+  }
+  return { rows: out };
+}
+function actApprove_(u, p) {
+  if (u.role !== 'admin') throw fail_('Hanya admin.');
+  var sh = karSheet_();
+  var f = findRowById_(sh, KARYAWAN_HDR, String(p.id || ''));
+  if (!f || f.o.aktif !== 'P') throw fail_('Pendaftaran tidak ditemukan.');
+  if (p.approve) {
+    var role = ['admin', 'atasan', 'karyawan'].indexOf(p.role) >= 0 ? p.role : 'karyawan';
+    f.o.aktif = 'Y'; f.o.role = role;
+    if (p.unit) f.o.unit = String(p.unit).substring(0, 60);
+    writeRow_(sh, KARYAWAN_HDR, f.row, f.o);
+    CacheService.getScriptCache().remove('U:' + f.o.id);
+    if (f.o.email) sendMail_(f.o.email, 'Akun disetujui - Absensi RSI At-Tin Husada', 'Halo ' + f.o.nama + ',\n\nPendaftaran Anda disetujui. Silakan login dengan username "' + f.o.username + '" dan password yang Anda buat saat mendaftar.\n\nAbsensi RSI At-Tin Husada Ngawi');
+  } else {
+    sh.deleteRow(f.row);
+    CacheService.getScriptCache().remove('U:' + f.o.id);
+    if (f.o.email) sendMail_(f.o.email, 'Pendaftaran belum dapat disetujui - Absensi RSI At-Tin Husada', 'Halo ' + f.o.nama + ',\n\nMaaf, pendaftaran Anda belum dapat disetujui. Silakan hubungi admin IT.\n\nAbsensi RSI At-Tin Husada Ngawi');
+  }
+  return { ok: true };
+}
+function actResetList_(u) {
+  if (u.role !== 'admin') throw fail_('Hanya admin.');
+  var rr = readAll_(resetSheet_()), users = readAll_(karSheet_()), byId = {}, out = [];
+  for (var i = 0; i < users.length; i++) byId[users[i].id] = users[i];
+  for (var j = 0; j < rr.length; j++) {
+    if (rr[j].status !== 'baru') continue;
+    var us = byId[rr[j].userId] || {};
+    out.push({ id: rr[j].id, userId: rr[j].userId, username: rr[j].username, nama: rr[j].nama, unit: rr[j].unit, createdAt: rr[j].createdAt, hp: us.hp || '', email: us.email || '' });
+  }
+  return { rows: out };
+}
+/** Admin membuat password sementara (berlaku 24 jam) lalu menyampaikannya lewat WhatsApp/langsung. */
+function actResetBuat_(u, p) {
+  if (u.role !== 'admin') throw fail_('Hanya admin.');
+  var sh = karSheet_();
+  var f = findRowById_(sh, KARYAWAN_HDR, String(p.userId || ''));
+  if (!f || f.o.aktif !== 'Y') throw fail_('Akun tidak ditemukan.');
+  var tmp = randomTempPw_();
+  f.o.tempHash = hash_(f.o.salt, tmp); f.o.tempExp = plusMinutesTs_(TEMP_PW_MENIT_ADMIN);
+  writeRow_(sh, KARYAWAN_HDR, f.row, f.o);
+  CacheService.getScriptCache().remove('U:' + f.o.id);
+  var rs = resetSheet_(), rr = readAll_(rs);
+  for (var i = 0; i < rr.length; i++) {
+    if (rr[i].userId === f.o.id && rr[i].status === 'baru') { rs.getRange(i + 2, RESET_HDR.indexOf('status') + 1).setNumberFormat('@').setValue('selesai'); }
+  }
+  return { password: tmp, nama: f.o.nama, username: f.o.username, hp: f.o.hp || '', berlakuMenit: TEMP_PW_MENIT_ADMIN };
+}
+
+/* ---------- foto profil ---------- */
+function actSaveFotoProfil_(u, p) {
+  if (!validFotoProfil_(p.foto)) throw fail_('Foto profil tidak valid.');
+  setFoto_(u.id, String(p.foto));
+  return { ok: true };
+}
+function actProfilFoto_(u, p) {
+  var id = String(p.id || '');
+  var t = getUserById_(id);
+  if (!t) throw fail_('Pengguna tidak ditemukan.');
+  if (t.id !== u.id && !(isManager_(u) && canSee_(u, t.unit))) throw fail_('Tidak punya akses.');
+  return { foto: fotoOf_(id) };
+}
+
 /* ====================== CONFIG ====================== */
 function getConfig_() {
   var rows = readAll_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_CONFIG));
-  var c = { lokasi: [], retensiFotoHari: 90 };
+  var c = { lokasi: [], retensiFotoHari: 90, waAdmin: '' };
   for (var i = 0; i < rows.length; i++) {
     if (rows[i].key === 'lokasi') { try { c.lokasi = JSON.parse(rows[i].value) || []; } catch (e) { c.lokasi = []; } }
     if (rows[i].key === 'retensiFotoHari') c.retensiFotoHari = parseInt(rows[i].value, 10) || 90;
+    if (rows[i].key === 'waAdmin') c.waAdmin = rows[i].value;
   }
   return c;
 }
@@ -354,6 +613,7 @@ function actSaveConfig_(u, p) {
   setConfigKey_('lokasi', JSON.stringify(lok));
   var r = parseInt(p.retensiFotoHari, 10);
   if (r >= 7 && r <= 3650) setConfigKey_('retensiFotoHari', r);
+  if (p.waAdmin !== undefined) setConfigKey_('waAdmin', normWa_(p.waAdmin));
   return { ok: true };
 }
 
@@ -551,9 +811,10 @@ function actState_(u) {
   lapTargets[today] = lap[u.id + '_' + today] || '';
   if (open) lapTargets[open.o.tanggal] = lap[u.id + '_' + open.o.tanggal] || '';
   return {
-    me: pubUser_(u), now: now, today: today, period: periodRange_(key),
+    me: pubUserFull_(u), now: now, today: today, period: periodRange_(key),
     open: open ? pubRecord_(open.o) : null, todayRecords: recs, olderOpen: yRec,
-    laporan: lapTargets, lokasi: cfg.lokasi, defaultRadius: DEFAULT_RADIUS
+    laporan: lapTargets, lokasi: cfg.lokasi, defaultRadius: DEFAULT_RADIUS,
+    counts: u.role === 'admin' ? adminCounts_() : null
   };
 }
 
@@ -603,7 +864,7 @@ function actRiwayat_(u, p) {
 function actRekap_(u, p) {
   if (!isManager_(u)) throw fail_('Tidak punya akses.');
   var key = validKey_(p.period) ? p.period : periodKey_(nowJ_().substring(0, 10));
-  var users = readAll_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN)).filter(function (x) {
+  var users = readAll_(karSheet_()).filter(function (x) {
     return x.aktif === 'Y' && canSee_(u, x.unit);
   });
   var sh = absenSheet_(key, false);
@@ -672,8 +933,8 @@ function actFoto_(u, p) {
 /* ====================== MANAJEMEN KARYAWAN ====================== */
 function actKaryawanList_(u) {
   if (u.role !== 'admin') throw fail_('Hanya admin.');
-  var rows = readAll_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN));
-  return { rows: rows.map(function (r) { return { id: r.id, nip: r.nip, nama: r.nama, unit: r.unit, username: r.username, role: r.role, aktif: r.aktif }; }) };
+  var rows = readAll_(karSheet_());
+  return { rows: rows.map(function (r) { return { id: r.id, nip: r.nip, nama: r.nama, unit: r.unit, username: r.username, role: r.role, aktif: r.aktif, email: r.email || '', hp: r.hp || '' }; }) };
 }
 function actKaryawanSave_(u, p) {
   if (u.role !== 'admin') throw fail_('Hanya admin.');
@@ -681,7 +942,7 @@ function actKaryawanSave_(u, p) {
   var nama = String(d.nama || '').trim(), username = String(d.username || '').trim().toLowerCase();
   if (!nama || !/^[a-z0-9._-]{3,30}$/.test(username)) throw fail_('Nama wajib diisi dan username 3-30 karakter (huruf kecil/angka).');
   var role = ['admin', 'atasan', 'karyawan'].indexOf(d.role) >= 0 ? d.role : 'karyawan';
-  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN);
+  var sh = karSheet_();
   var rows = readAll_(sh);
   for (var i = 0; i < rows.length; i++) {
     if (rows[i].username === username && rows[i].id !== d.id) throw fail_('Username sudah dipakai.');
@@ -692,6 +953,8 @@ function actKaryawanSave_(u, p) {
     if (f.o.id === u.id && (d.aktif === 'N' || role !== 'admin')) throw fail_('Tidak dapat menonaktifkan/menurunkan akun Anda sendiri.');
     f.o.nip = String(d.nip || ''); f.o.nama = nama; f.o.unit = String(d.unit || ''); f.o.username = username;
     f.o.role = role; f.o.aktif = d.aktif === 'N' ? 'N' : 'Y';
+    if (d.email !== undefined) { if (!validEmail_(String(d.email).trim())) throw fail_('Format email tidak valid.'); f.o.email = String(d.email).trim().toLowerCase(); }
+    if (d.hp !== undefined) f.o.hp = normWa_(d.hp);
     if (d.password) {
       if (String(d.password).length < 6) throw fail_('Password minimal 6 karakter.');
       var salt = randomSalt_(); f.o.salt = salt; f.o.hash = hash_(salt, String(d.password)); f.o.wajibGanti = 'Y';
@@ -701,7 +964,7 @@ function actKaryawanSave_(u, p) {
     return { ok: true };
   }
   var pw = String(d.password || d.nip || '123456');
-  saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: String(d.unit || ''), username: username, role: role, aktif: 'Y' }, pw, true);
+  saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: String(d.unit || ''), username: username, role: role, aktif: 'Y', email: validEmail_(String(d.email || '').trim()) ? String(d.email || '').trim().toLowerCase() : '', hp: normWa_(d.hp) }, pw, true);
   return { ok: true, password: pw };
 }
 /** Impor massal: baris {nip,nama,unit,username,role,password}. Password awal default = NIP. */
@@ -709,7 +972,7 @@ function actKaryawanImport_(u, p) {
   if (u.role !== 'admin') throw fail_('Hanya admin.');
   var list = p.rows || [];
   if (list.length > 500) throw fail_('Maksimal 500 baris per impor.');
-  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_KARYAWAN);
+  var sh = karSheet_();
   var exist = {};
   var rows = readAll_(sh);
   for (var i = 0; i < rows.length; i++) exist[rows[i].username] = true;
@@ -720,7 +983,7 @@ function actKaryawanImport_(u, p) {
     if (!nama || !/^[a-z0-9._-]{3,30}$/.test(un) || exist[un]) { skipped.push(un || nama || ('baris ' + (j + 1))); continue; }
     var pw = String(d.password || d.nip || '123456');
     var role = ['admin', 'atasan', 'karyawan'].indexOf(d.role) >= 0 ? d.role : 'karyawan';
-    saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: String(d.unit || ''), username: un, role: role, aktif: 'Y' }, pw, true);
+    saveKaryawanRow_(sh, { nip: String(d.nip || ''), nama: nama, unit: String(d.unit || ''), username: un, role: role, aktif: 'Y', email: validEmail_(String(d.email || '').trim()) ? String(d.email || '').trim().toLowerCase() : '', hp: normWa_(d.hp) }, pw, true);
     exist[un] = true; made.push(un);
   }
   return { ok: true, dibuat: made.length, dilewati: skipped };
@@ -766,14 +1029,27 @@ function doGet(e) {
     if (!a) return out_({ ok: true, app: 'absensi-rsi', time: nowJ_() });
     if (a === 'ping') return out_({ ok: true, time: nowJ_() });
     if (a === 'login') return out_(actLogin_(p));
+    if (a === 'cekUsername') return out_(actCekUsername_(p));
+    if (a === 'cekDaftar') return out_(actCekDaftar_(p));
+    if (a === 'infoPublik') return out_(actInfoPublik_());
+    if (a === 'lupaPassword') {
+      var lk0 = LockService.getScriptLock(); lk0.waitLock(20000);
+      try { return out_(actLupa_(p)); } finally { try { lk0.releaseLock(); } catch (e0) { /* tidak terkunci */ } }
+    }
     var u = auth_(p.token);
     switch (a) {
       case 'state': return out_(actState_(u));
       case 'riwayat': return out_(actRiwayat_(u, p));
       case 'rekap': return out_(actRekap_(u, p));
       case 'foto': return out_(actFoto_(u, p));
+      case 'profilFoto': return out_(actProfilFoto_(u, p));
       case 'changePassword': return out_(actChangePassword_(u, p));
       case 'karyawanList': return out_(actKaryawanList_(u));
+      case 'pendingList': return out_(actPendingList_(u));
+      case 'resetList': return out_(actResetList_(u));
+      case 'resetBuat':
+        var lk = LockService.getScriptLock(); lk.waitLock(20000);
+        try { return out_(actResetBuat_(u, p)); } finally { try { lk.releaseLock(); } catch (e3) { /* tidak terkunci */ } }
       case 'config': return out_(getConfig_());
       default: return out_({ error: 'Aksi tidak dikenal: ' + a });
     }
@@ -786,9 +1062,14 @@ function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
     var p = JSON.parse(e.postData.contents);
+    var r;
+    if (p.action === 'signup' || p.action === 'lupaPassword') {   // publik (tanpa login)
+      lock.waitLock(25000);
+      r = p.action === 'signup' ? actSignup_(p) : actLupa_(p);
+      return out_(r);
+    }
     var u = auth_(p.token);
     lock.waitLock(25000);
-    var r;
     switch (p.action) {
       case 'masuk': r = actMasuk_(u, p); break;
       case 'pulang': r = actPulang_(u, p); break;
@@ -797,6 +1078,8 @@ function doPost(e) {
       case 'saveConfig': r = actSaveConfig_(u, p); break;
       case 'karyawanSave': r = actKaryawanSave_(u, p); break;
       case 'karyawanImport': r = actKaryawanImport_(u, p); break;
+      case 'karyawanApprove': r = actApprove_(u, p); break;
+      case 'saveFotoProfil': r = actSaveFotoProfil_(u, p); break;
       default: r = { error: 'Aksi tidak dikenal: ' + p.action };
     }
     return out_(r);
