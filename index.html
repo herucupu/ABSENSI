@@ -120,6 +120,10 @@ main{padding:14px var(--pad) calc(96px + var(--safe-b));max-width:760px;margin:0
 .nav.many button{font-size:10px;} .nav.many button .ic{font-size:18px;}
 .jg-unit h3{display:flex;align-items:center;justify-content:space-between;gap:8px;} .jg-n{min-width:26px;padding:2px 9px;border-radius:12px;background:#E3F6EE;color:#0a7a50;font-size:13px;text-align:center;font-weight:700;} .jg-n.zero{background:#EEF1F7;color:#6a7592;}
 .jg-p{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(154,166,189,.25);} .jg-p .grow{min-width:0;} .jg-p .t{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pw-wrap{position:relative;display:block;width:100%;} .pw-wrap input{padding-right:46px !important;width:100%;}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:none;padding:9px;color:var(--dim);cursor:pointer;line-height:0;border-radius:12px;} .pw-eye:hover,.pw-eye.on{color:var(--blue);}
+.lp-item .row{align-items:center;} .lp-item .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.jg-grp-h{display:flex;align-items:center;gap:8px;}
 .jg-wa{text-decoration:none;padding:7px 11px;border-radius:12px;background:#E3F6EE;color:#0a7a50;font-weight:700;font-size:13px;}
 .flag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin:2px 3px 0 0;background:rgba(224,138,43,.18);color:#9a5a10;border:1px solid rgba(224,138,43,.35);}
 .flag.bad{background:#fff;color:#8f2a1f;border-color:rgba(220,59,46,.6);} .flag.ok{background:rgba(31,191,134,.16);color:#0a7a50;border-color:rgba(31,191,134,.35);}
@@ -239,6 +243,8 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
       <div class="small dim" style="margin-bottom:10px">Daftar petugas yang sudah absen masuk dan belum pulang, per unit. Diperbarui otomatis tiap 30 detik. <span id="jgAt"></span></div>
       <div class="row wrap" style="margin-bottom:10px">
         <select class="inp grow" id="jgUnit" style="min-width:120px"></select>
+        <select class="inp grow" id="jgShift" style="min-width:120px"><option value="">Semua shift</option><option value="P">🌅 Pagi</option><option value="S">☀️ Siang</option><option value="D">🌤️ Middle</option><option value="M">🌙 Malam</option></select>
+        <select class="inp grow" id="jgView" style="min-width:120px"><option value="unit">Urut per unit</option><option value="shift">Urut per shift</option></select>
         <input class="inp grow" id="jgSearch" placeholder="🔍 Cari nama…" style="min-width:120px">
       </div>
       <div class="sum-grid" id="jgSum"></div>
@@ -249,7 +255,8 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
     <section class="page hidden" id="pg-laporan">
       <div class="glass card">
         <h3>📝 Isi Laporan Harian</h3>
-        <div class="field"><label>Tanggal</label><select id="lpDate"></select></div>
+        <div class="row"><div class="field grow"><label>Tanggal</label><select id="lpDate"></select></div><div class="field grow"><label>Shift</label><select id="lpShift"></select></div></div>
+        <div class="small dim" id="lpInfo" style="margin:-4px 0 8px"></div>
         <div class="field"><label>Uraian pekerjaan</label><textarea id="lpText" placeholder="Tulis satu pekerjaan per baris, misalnya:&#10;- Pemeriksaan jaringan lantai 2&#10;- Pelayanan pasien poli umum"></textarea><div class="small dim" style="margin-top:4px" id="lpCount">0 / 4000</div></div>
         <button class="btn btn-teal btn-block" id="btnSaveLaporan" style="padding:14px">Simpan Laporan</button>
       </div>
@@ -310,7 +317,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
         <div id="kyList"></div>
       </div>
       <div id="adApp" class="hidden"><div class="small dim" style="margin-bottom:10px">Pendaftaran mandiri karyawan. Periksa foto & data, pilih peran, lalu setujui. Akun baru baru bisa login setelah disetujui.</div><div id="apList"></div></div>
-      <div id="adRes" class="hidden"><div class="small dim" style="margin-bottom:10px">Karyawan yang lupa password dan <b>tidak punya email terdaftar</b> masuk di sini. Buat password sementara lalu kirim lewat WhatsApp.</div><div id="rsList"></div></div>
+      <div id="adRes" class="hidden"><div class="small dim" style="margin-bottom:10px">Karyawan yang lupa password masuk di sini (kecuali yang tidak punya no. WhatsApp tetapi punya email, dikirim otomatis lewat email). Buat password sementara lalu kirim lewat WhatsApp.</div><div id="rsList"></div></div>
       <div id="adUnit" class="hidden"><div class="small dim" style="margin-bottom:10px">Daftar unit dipakai saat karyawan mendaftar dan untuk halaman Jaga Sekarang. Mengganti nama unit ikut mengubah unit semua karyawannya.</div><div class="row" style="margin-bottom:10px"><input class="inp grow" id="unNew" placeholder="Nama unit baru, mis. IGD"><button class="btn btn-primary btn-sm" id="unAdd">+ Tambah</button></div><div id="unList"></div></div>
       <div id="adSet" class="hidden">
         <div class="glass card"><h3>📍 Titik Lokasi Absen</h3>
@@ -359,7 +366,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 /* ============================================================
    KONFIGURASI — isi dengan URL Web App Apps Script Anda
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbzmQ0WOttc0MKDDNDPyPWe4Y2z9T8mPSMvLTb09x3f6xsEkP6qSevqG-df6JRSQVzwM/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxrjmGyODnDFAsWhK1IdDW8jGANMxGhNHskQDG36FFRsXS8aQDQGa7saCrxnjcP_0XU/exec";
 
 /* ---------------- util ---------------- */
 const $ = (id) => document.getElementById(id);
@@ -394,7 +401,7 @@ function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classNam
 /* ---------------- API ---------------- */
 const API_READY = API_URL && API_URL.indexOf('PASTE_URL') < 0;
 let pubInfo = { waAdmin: '' };
-const NEED_VER = 4;
+const NEED_VER = 5;
 async function loadPubInfo() {
   if (!API_READY) return;
   try { pubInfo = await apiGet('infoPublik', { token: '' }); if (!pubInfo.ver || pubInfo.ver < NEED_VER) $('verWarn').classList.remove('hidden'); }
@@ -483,6 +490,23 @@ async function loadState() {
 function nowJ() { const t = new Date(serverNowMs + (Date.now() - fetchedAt)); return { date: t.getUTCFullYear() + '-' + pad(t.getUTCMonth() + 1) + '-' + pad(t.getUTCDate()), hhmm: pad(t.getUTCHours()) + ':' + pad(t.getUTCMinutes()), sec: pad(t.getUTCSeconds()), min: Math.floor(t.getTime() / 60000) }; }
 function utcMin(date, hhmm) { const p = date.split('-'), h = hhmm.split(':'); return Date.UTC(+p[0], +p[1] - 1, +p[2], +h[0], +h[1]) / 60000; }
 
+/* ---------------- ikon mata pada kolom password ---------------- */
+const EYE_ON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.8 19.8 0 0 1 5.06-5.94M9.9 4.24A10.9 10.9 0 0 1 12 5c7 0 11 7 11 7a19.8 19.8 0 0 1-3.17 4.19M14.12 14.12a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg>';
+function decoratePw(root) {
+  (root || document).querySelectorAll('input[type="password"]:not([data-eye])').forEach((inp) => {
+    inp.dataset.eye = '1';
+    const w = document.createElement('span'); w.className = 'pw-wrap';
+    inp.parentNode.insertBefore(w, inp); w.appendChild(inp);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pw-eye'; b.setAttribute('aria-label', 'Lihat password'); b.innerHTML = EYE_ON;
+    b.addEventListener('mousedown', (e) => e.preventDefault());
+    b.addEventListener('click', () => { const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.innerHTML = show ? EYE_OFF : EYE_ON; b.classList.toggle('on', show); b.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Lihat password'); });
+    w.appendChild(b);
+  });
+}
+decoratePw();
+new MutationObserver(() => decoratePw()).observe(document.body, { childList: true, subtree: true });
+
 /* ---------------- start ---------------- */
 let clockT = null;
 function stopClock() { clearInterval(clockT); clockT = null; }
@@ -567,12 +591,11 @@ function renderHome() {
     a.innerHTML = `<button class="btn btn-teal big-btn" id="btnMasuk">▶ Absen Masuk<small>Pilih shift, ambil foto, lokasi otomatis</small></button>`;
     $('btnMasuk').addEventListener('click', () => openAbsen('masuk'));
   }
-  const lapKey = open ? open.tanggal : S.today, lap = S.laporan[lapKey] || S.laporan[S.today] || '';
-  const lapDate = S.laporan[lapKey] !== undefined ? lapKey : S.today;
-  $('homeLaporan').innerHTML = lap
-    ? `<div class="small dim">${fmtDate(lapDate)}</div><div class="lap-text">${esc(lap)}</div><button class="btn btn-sm" style="margin-top:10px" id="hlEdit">Ubah laporan</button>`
-    : `<div class="dim small" style="margin-bottom:10px">Laporan hari ini belum diisi.</div><button class="btn btn-teal btn-sm" id="hlEdit">Isi laporan sekarang</button>`;
-  $('hlEdit').addEventListener('click', () => { go('laporan'); });
+  const tg = []; const addT = (r) => { if (r && !tg.some((x) => x.d === r.tanggal && x.s === r.shift)) tg.push({ d: r.tanggal, s: r.shift }); };
+  addT(S.olderOpen); addT(S.open); recs.forEach(addT);
+  $('homeLaporan').innerHTML = tg.length ? tg.map((x) => { const t = lapFor(S.laporan, x.d, x.s); return `<div style="margin-bottom:10px"><div class="row between"><div class="small dim"><span class="tag tag-${esc(x.s)}">${esc(SHIFT_NAME[x.s] || x.s)}</span> ${fmtDate(x.d)}</div><button class="btn btn-sm ${t ? '' : 'btn-teal'}" data-lp="${esc(x.d)}|${esc(x.s)}">${t ? '✎ Ubah' : 'Isi laporan'}</button></div>${t ? '<div class="lap-text">' + esc(t) + '</div>' : '<div class="dim small" style="margin-top:4px">Laporan shift ini belum diisi.</div>'}</div>`; }).join('')
+    : `<div class="dim small" style="margin-bottom:10px">Belum ada absen hari ini. Laporan diisi per tanggal dan shift.</div><button class="btn btn-teal btn-sm" data-lp="">Isi laporan</button>`;
+  $('homeLaporan').querySelectorAll('[data-lp]').forEach((b) => b.addEventListener('click', () => { const p = b.dataset.lp.split('|'); lapPreset = p[0] ? { d: p[0], s: p[1] } : null; go('laporan'); }));
   $('todayList').innerHTML = recs.length ? recs.map(recItem).join('') : '<div class="empty">Belum ada absen hari ini.</div>';
   bindRecButtons($('todayList'));
   tick();
@@ -713,37 +736,70 @@ function renderPending() {
 }
 async function checkPending() { renderPending(); }
 
-/* ---------------- LAPORAN ---------------- */
-let lapMap = {};
+/* ---------------- LAPORAN (per tanggal + shift) ---------------- */
+let lapMap = {}, lapRows = [], lapPreset = null;
+const LAP_DAYS = 7;
+/** Cari laporan: kunci tgl_shift, jatuh ke laporan lama (tanpa shift) bila belum ada. */
+function lapFor(map, tgl, shift) { return map[tgl + '_' + shift] || map[tgl + '_'] || ''; }
+function lapForUser(map, uid, tgl, shift) { return map[uid + '_' + tgl + '_' + shift] || map[uid + '_' + tgl + '_'] || ''; }
+function lapShiftOptions(d) {
+  const set = new Set();
+  lapRows.forEach((r) => { if (r.tanggal === d && r.shift !== 'L') set.add(r.shift); });
+  if (S) { [S.open, S.olderOpen].concat(S.todayRecords).forEach((r) => { if (r && r.tanggal === d && r.shift !== 'L') set.add(r.shift); }); }
+  Object.keys(lapMap).forEach((k) => { if (k.startsWith(d + '_') && k.length > 11) set.add(k.slice(11)); });
+  let list = ['P', 'S', 'D', 'M'].filter((x) => set.has(x));
+  return list.length ? list : ['P', 'S', 'D', 'M'];
+}
+function fillShiftSel(wanted) {
+  const d = $('lpDate').value, list = lapShiftOptions(d);
+  $('lpShift').innerHTML = list.map((x) => `<option value="${x}">${SHIFT_NAME[x]}${lapMap[d + '_' + x] ? ' ✓' : ''}</option>`).join('');
+  let pick = wanted && list.includes(wanted) ? wanted : '';
+  if (!pick && S && S.open && S.open.tanggal === d && list.includes(S.open.shift)) pick = S.open.shift;
+  if (!pick) { const rs = lapRows.filter((r) => r.tanggal === d && list.includes(r.shift)); if (rs.length) pick = rs[0].shift; }
+  if (!pick) { const l = localStorage.getItem('absensi_last_shift'); pick = list.includes(l) ? l : list[0]; }
+  $('lpShift').value = pick;
+}
 function initLaporan() {
   const t = S ? S.today : nowJ().date; const sel = $('lpDate');
-  const opts = []; for (let i = 0; i < 4; i++) { const d = addDays(t, -i); opts.push(`<option value="${d}">${i === 0 ? 'Hari ini' : (i === 1 ? 'Kemarin' : i + ' hari lalu')} — ${fmtDate(d)}</option>`); }
-  const keep = sel.value; sel.innerHTML = opts.join('');
-  const def = S && S.open ? S.open.tanggal : t; sel.value = keep && opts.join('').includes(keep) ? keep : (opts.join('').includes(def) ? def : t);
-  loadLapHistory().then(fillLap);
+  const opts = []; for (let i = 0; i <= LAP_DAYS; i++) { const d = addDays(t, -i); opts.push(`<option value="${d}">${i === 0 ? 'Hari ini' : (i === 1 ? 'Kemarin' : i + ' hari lalu')} — ${fmtDate(d)}</option>`); }
+  const keep = sel.value; const html = opts.join(''); sel.innerHTML = html;
+  const def = S && S.open ? S.open.tanggal : t;
+  const pre = lapPreset; lapPreset = null;
+  sel.value = pre && html.includes(pre.d) ? pre.d : (keep && html.includes(keep) ? keep : (html.includes(def) ? def : t));
+  loadLapHistory().then(() => { fillShiftSel(pre ? pre.s : ''); fillLap(); if (pre) $('lpText').focus({ preventScroll: true }); });
 }
 async function loadLapHistory() {
-  const k = periodKeyOf(S ? S.today : nowJ().date);
+  const t = S ? S.today : nowJ().date, k = periodKeyOf(t), k2 = periodKeyOf(addDays(t, -LAP_DAYS));
   try {
-    const r = await apiGet('riwayat', { period: k }); lapMap = Object.assign({}, r.laporan);
-    if (S) Object.keys(S.laporan).forEach((d) => { if (S.laporan[d]) lapMap[me.id + '_' + d] = S.laporan[d]; });
-    const keys = Object.keys(lapMap).filter((x) => x.startsWith(me.id + '_')).sort().reverse().slice(0, 10);
-    $('lpHistory').innerHTML = keys.length ? keys.map((x) => { const d = x.slice(me.id.length + 1); return `<div class="item"><div class="t">${fmtDate(d)}</div><div class="lap-text">${esc(lapMap[x])}</div></div>`; }).join('') : '<div class="empty">Belum ada laporan pada periode ini.</div>';
+    const rs = await Promise.all([apiGet('riwayat', { period: k })].concat(k2 !== k ? [apiGet('riwayat', { period: k2 })] : []));
+    lapMap = {}; lapRows = [];
+    rs.forEach((r) => { lapRows = lapRows.concat(r.rows); Object.keys(r.laporan).forEach((x) => { if (x.startsWith(me.id + '_')) lapMap[x.slice(me.id.length + 1)] = r.laporan[x]; }); });
+    if (S) Object.keys(S.laporan).forEach((x) => { if (S.laporan[x]) lapMap[x] = S.laporan[x]; });
+    lapRows.sort((a, b) => (a.tanggal < b.tanggal ? 1 : a.tanggal > b.tanggal ? -1 : (a.jamMasuk < b.jamMasuk ? 1 : -1)));
+    const keys = Object.keys(lapMap).sort().reverse().slice(0, 14), minD = addDays(t, -LAP_DAYS);
+    $('lpHistory').innerHTML = keys.length ? keys.map((x) => { const d = x.slice(0, 10), sh = x.slice(11); const can = d >= minD;
+      return `<div class="item lp-item"><div class="row between"><div class="t">${sh ? `<span class="tag tag-${esc(sh)}">${esc(SHIFT_NAME[sh] || sh)}</span>` : '<span class="tag tag-L">Lama</span>'} ${fmtDate(d)}</div>${can ? `<button class="btn btn-sm" data-ed="${esc(d)}|${esc(sh)}">✎ Ubah</button>` : ''}</div><div class="lap-text">${esc(lapMap[x])}</div></div>`; }).join('') : '<div class="empty">Belum ada laporan pada periode ini.</div>';
+    $('lpHistory').querySelectorAll('[data-ed]').forEach((b) => b.addEventListener('click', () => { const p = b.dataset.ed.split('|'); $('lpDate').value = p[0]; fillShiftSel(p[1] || ''); fillLap(); $('lpText').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
   } catch (e) { $('lpHistory').innerHTML = `<div class="banner red">${esc(e.message)}</div>`; }
 }
-function fillLap() { $('lpText').value = lapMap[me.id + '_' + $('lpDate').value] || ''; $('lpCount').textContent = $('lpText').value.length + ' / 4000'; }
-$('lpDate').addEventListener('change', fillLap);
+function fillLap() {
+  const d = $('lpDate').value, sh = $('lpShift').value, own = lapMap[d + '_' + sh], legacy = lapMap[d + '_'];
+  $('lpText').value = own || legacy || ''; $('lpCount').textContent = $('lpText').value.length + ' / 4000';
+  $('lpInfo').textContent = own ? '✎ Sedang mengubah laporan yang sudah tersimpan.' : (legacy ? 'Laporan lama (sebelum ada pembagian shift). Simpan untuk memindahkannya ke shift ini.' : 'Laporan baru. Satu laporan untuk tiap tanggal dan shift.');
+  $('btnSaveLaporan').textContent = own ? 'Perbarui Laporan' : 'Simpan Laporan';
+}
+$('lpDate').addEventListener('change', () => { fillShiftSel(''); fillLap(); }); $('lpShift').addEventListener('change', fillLap);
 $('lpText').addEventListener('input', () => { $('lpCount').textContent = $('lpText').value.length + ' / 4000'; });
 $('btnSaveLaporan').addEventListener('click', async () => {
-  const tgl = $('lpDate').value, isi = $('lpText').value.trim();
+  const tgl = $('lpDate').value, shift = $('lpShift').value, isi = $('lpText').value.trim();
   if (!isi) return toast('Isi laporan masih kosong', true);
   const b = $('btnSaveLaporan'); b.disabled = true; b.innerHTML = '<span class="spin"></span> Menyimpan…';
   try {
     const k = periodKeyOf(tgl);
-    const r = await sendAndConfirm('saveLaporan', { tanggal: tgl, isi }, () => apiGet('riwayat', { period: k }), (d) => (d.laporan[me.id + '_' + tgl] || '').trim() === isi.slice(0, 4000));
-    if (r) { toast('✅ Laporan tersimpan'); await loadState(); renderHome(); await loadLapHistory(); } else toast(NOT_CONFIRMED, true);
+    const r = await sendAndConfirm('saveLaporan', { tanggal: tgl, shift, isi }, () => apiGet('riwayat', { period: k }), (d) => (d.laporan[me.id + '_' + tgl + '_' + shift] || '').trim() === isi.slice(0, 4000));
+    if (r) { toast('✅ Laporan tersimpan'); await loadState(); renderHome(); await loadLapHistory(); fillShiftSel(shift); fillLap(); } else toast(NOT_CONFIRMED, true);
   } catch (e) { toast(e.message, true); }
-  b.disabled = false; b.textContent = 'Simpan Laporan';
+  b.disabled = false; fillLap();
 });
 
 /* ---------------- RIWAYAT ---------------- */
@@ -755,7 +811,7 @@ async function loadRiwayat() {
     const r = await apiGet('riwayat', { period: rwKey }); const s = r.summary || { hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, cek: 0, belum: 0 };
     $('rwSum').innerHTML = `<div><b>${s.hari}</b><span>Hari hadir</span></div><div><b>${fmtDur(s.menit)}</b><span>Total jam</span></div><div><b>${s.P}/${s.S}/${s.D || 0}/${s.M}</b><span>P / S / D / M</span></div><div><b>${s.belum}</b><span>Belum pulang</span></div>`;
     $('rwList').innerHTML = r.rows.length ? r.rows.map((x) => recItem(x) + '').map((h, i) => {
-      const lap = r.laporan[me.id + '_' + r.rows[i].tanggal];
+      const lap = lapForUser(r.laporan, me.id, r.rows[i].tanggal, r.rows[i].shift);
       return lap ? h.replace(/<\/div><\/div>$/, `</div>${'<div class="lap-text">' + esc(lap) + '</div>'}</div>`) : h;
     }).join('') : '<div class="empty">Belum ada absen pada periode ini.</div>';
     bindRecButtons($('rwList'));
@@ -793,7 +849,7 @@ function openEmployee(uid_) {
   openGen(`<div class="row" style="margin-bottom:10px"><div class="avatar md" id="emAv"></div><div><h2 style="margin:0">${esc(s.nama)}</h2><div class="small dim">${esc(s.unit || '')} · ${periodLabel(tmKey)}</div></div></div>
     <div class="sum-grid"><div><b>${s.hari}</b><span>Hari</span></div><div><b>${fmtDur(s.menit)}</b><span>Jam</span></div><div><b>${s.cek}</b><span>Cek</span></div></div>
     <div id="empList">${rows.length ? rows.map((r) => {
-      const lap = tmData.laporan[r.userId + '_' + r.tanggal];
+      const lap = lapForUser(tmData.laporan, r.userId, r.tanggal, r.shift);
       return recItem(r).replace(/<div class="row wrap" style="margin-top:8px;gap:6px">/, (lap ? `<div class="lap-text">${esc(lap)}</div>` : '') + '<div class="row wrap" style="margin-top:8px;gap:6px"><button class="btn btn-sm btn-primary" data-kor="1">✎ Koreksi / Cek</button>');
     }).join('') : '<div class="empty">Belum ada absen.</div>'}</div>
     <div class="foot"><button class="btn" onclick="closeGen()">Tutup</button></div>`);
@@ -837,7 +893,7 @@ $('btnExport').addEventListener('click', async () => {
     const ws = wb.addWorksheet('Rekap'); head(ws, [{ header: 'No', width: 6 }, { header: 'Nama', width: 30 }, { header: 'Unit', width: 18 }, { header: 'Hari Hadir', width: 11 }, { header: 'Total Jam', width: 12 }, { header: 'Shift P', width: 9 }, { header: 'Shift S', width: 9 }, { header: 'Shift D (Middle)', width: 9 }, { header: 'Shift M', width: 9 }, { header: 'Absen di Libur', width: 13 }, { header: 'Perlu Dicek', width: 12 }, { header: 'Belum Pulang', width: 13 }]);
     sum.forEach((s, i) => ws.addRow([i + 1, s.nama, s.unit, s.hari, +(s.menit / 60).toFixed(1), s.P, s.S, s.D || 0, s.M, s.L, s.cek, s.belum]));
     const wd = wb.addWorksheet('Detail'); head(wd, [{ header: 'Tanggal', width: 14 }, { header: 'Nama', width: 28 }, { header: 'Unit', width: 16 }, { header: 'Shift', width: 8 }, { header: 'Jam Masuk', width: 11 }, { header: 'Jam Pulang', width: 11 }, { header: 'Durasi', width: 10 }, { header: 'Status', width: 28 }, { header: 'Laporan Harian', width: 60 }, { header: 'Catatan', width: 24 }]);
-    rows.slice().sort((a, b) => (a.nama < b.nama ? -1 : a.nama > b.nama ? 1 : a.tanggal < b.tanggal ? -1 : 1)).forEach((r) => wd.addRow([r.tanggal, r.nama, r.unit, r.shift, r.jamMasuk, r.jamPulang || '', r.durasi != null ? fmtDur(r.durasi) : '', flagsOf(r).map((f) => FLAG_LABEL[f] || f).join(', '), tmData.laporan[r.userId + '_' + r.tanggal] || '', r.catatan || '']));
+    rows.slice().sort((a, b) => (a.nama < b.nama ? -1 : a.nama > b.nama ? 1 : a.tanggal < b.tanggal ? -1 : 1)).forEach((r) => wd.addRow([r.tanggal, r.nama, r.unit, r.shift, r.jamMasuk, r.jamPulang || '', r.durasi != null ? fmtDur(r.durasi) : '', flagsOf(r).map((f) => FLAG_LABEL[f] || f).join(', '), lapForUser(tmData.laporan, r.userId, r.tanggal, r.shift), r.catatan || '']));
     [ws, wd].forEach((w) => w.eachRow((row, n) => { if (n > 1) row.eachCell({ includeEmpty: true }, (c) => { c.border = bd; c.alignment = { vertical: 'top', wrapText: true }; }); }));
     const buf = await wb.xlsx.writeBuffer(); const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
@@ -962,7 +1018,7 @@ function openSignup() {
     <div class="row"><div class="field grow"><label>NIP</label><input id="suNip" inputmode="text"></div><div class="field grow"><label>Unit</label><select id="suUnit"><option value="">— Pilih unit —</option></select></div></div>
     <div class="field"><label>Username</label><input id="suUser" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="huruf kecil/angka"><div class="small" id="suHint" style="margin-top:4px"></div></div>
     <div class="field"><label>Email (opsional, untuk menerima password sementara)</label><input id="suEmail" type="email" autocapitalize="none" placeholder="nama@gmail.com"></div>
-    <div class="field"><label>No. WhatsApp (opsional)</label><input id="suHp" inputmode="tel" placeholder="0812xxxxxxx"></div>
+    <div class="field"><label>No. WhatsApp (wajib, untuk menerima password baru)</label><input id="suHp" inputmode="tel" placeholder="0812xxxxxxx"></div>
     <div class="field"><label>Password (min. 6 karakter)</label><input id="suPw" type="password" autocomplete="new-password"></div>
     <div class="field"><label>Ulangi password</label><input id="suPw2" type="password" autocomplete="new-password"></div>
     <div class="foot"><button class="btn" onclick="closeGen()">Batal</button><button class="btn btn-primary" id="suSend">Daftar</button></div>`);
@@ -990,6 +1046,7 @@ async function submitSignup() {
   if (!d.unit) return toast('Pilih unit dahulu. Jika unit Anda belum ada, hubungi admin.', true);
   if (!/^[a-z0-9._-]{3,30}$/.test(d.username)) return toast('Username tidak valid', true);
   if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return toast('Format email tidak valid', true);
+  if (d.hp.replace(/\D/g, '').length < 9) return toast('No. WhatsApp wajib diisi', true);
   if (d.password.length < 6) return toast('Password minimal 6 karakter', true);
   if (d.password !== $('suPw2').value) return toast('Ulangi password tidak sama', true);
   const b = $('suSend'); b.disabled = true; b.innerHTML = '<span class="spin"></span> Mengirim…';
@@ -1011,7 +1068,7 @@ async function submitSignup() {
 /* ---------------- LUPA PASSWORD (publik) ---------------- */
 function openLupa() {
   openGen(`<h2>🔑 Lupa Password</h2>
-    <div class="small dim" style="margin-bottom:12px">Masukkan username dan NIP Anda. Password sementara akan dikirim ke <b>email terdaftar</b>; jika tidak ada email, admin akan memberi password sementara lewat WhatsApp.</div>
+    <div class="small dim" style="margin-bottom:12px">Masukkan username dan NIP Anda. Password sementara akan dikirim <b>lewat WhatsApp</b> ke nomor yang terdaftar di akun Anda (dikirim oleh admin). Jika akun tidak punya nomor WhatsApp, password dikirim ke email.</div>
     <div class="field"><label>Username</label><input id="lpUser" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc($('lgUser').value.trim())}"></div>
     <div class="field"><label>NIP</label><input id="lpNip"></div>
     <div class="foot"><button class="btn" onclick="closeGen()">Batal</button><button class="btn btn-primary" id="lpSend">Kirim permintaan</button></div>`);
@@ -1023,7 +1080,7 @@ function openLupa() {
       await apiGet('lupaPassword', { username: u, nip: n, token: '' });
       const wa = pubInfo.waAdmin ? `<a class="btn btn-teal btn-block" style="text-decoration:none;margin-top:10px" target="_blank" rel="noopener" href="${waLink(pubInfo.waAdmin, 'Assalamualaikum admin, saya lupa password akun Absensi RSI. Username: ' + u + ', NIP: ' + n + '. Mohon dibantu password sementara, terima kasih.')}">💬 Hubungi admin via WhatsApp</a>` : '';
       $('genBody').innerHTML = `<h2>📨 Permintaan Diterima</h2>
-        <div class="banner blue"><b>Jika username dan NIP cocok:</b><br>• Bila ada <b>email terdaftar</b> → password sementara dikirim ke email (berlaku 60 menit). Cek juga folder <b>Spam</b>.<br>• Bila <b>tidak ada email</b> → admin akan menghubungi Anda lewat WhatsApp.</div>
+        <div class="banner blue"><b>Jika username dan NIP cocok:</b><br>• Admin akan mengirim <b>password sementara lewat WhatsApp</b> ke nomor terdaftar (berlaku 24 jam).<br>• Jika akun tidak punya nomor WhatsApp tetapi punya email → dikirim ke email (berlaku 60 menit, cek folder <b>Spam</b>).<br>Ingin lebih cepat? Tekan tombol WhatsApp di bawah untuk menghubungi admin.</div>
         <div class="small dim">Login dengan password sementara, lalu Anda diminta membuat password baru. Password lama tetap berlaku sampai saat itu. Maksimal 3 permintaan per 6 jam.</div>${wa}<div class="foot"><button class="btn" onclick="closeGen()">Tutup</button></div>`;
     } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Kirim permintaan'; }
   });
@@ -1093,21 +1150,34 @@ async function loadJaga(silent) {
   try { jagaData = await apiGet('jaga'); renderJaga(); }
   catch (e) { if (e.message === 'Sesi berakhir') return; if (!silent || !jagaData) $('jgList').innerHTML = `<div class="banner red">${esc(e.message)}</div>`; }
 }
+function jgPerson(o, unitLabel) {
+  return `<div class="jg-p"><div class="avatar">${esc(o.nama.charAt(0).toUpperCase())}</div><div class="grow"><div class="t">${esc(o.nama)}${o.userId === me.id ? ' <span class="small dim">(Anda)</span>' : ''}</div><div class="small dim">${unitLabel ? esc(unitLabel) + ' · ' : ''}masuk ${esc(o.jamMasuk)}${o.tanggal !== jagaData.now.substring(0, 10) ? ' · ' + fmtDate(o.tanggal) : ''}</div></div><span class="tag tag-${esc(o.shift)}">${esc(SHIFT_NAME[o.shift] || o.shift)}</span>${o.hp ? `<a class="jg-wa" target="_blank" rel="noopener" href="${waLink(o.hp, 'Assalamualaikum ' + o.nama + ', ')}">WA</a>` : ''}</div>`;
+}
 function renderJaga() {
   if (!jagaData) return;
   const cur = $('jgUnit').value, names = jagaData.units.map((x) => x.unit);
   $('jgUnit').innerHTML = '<option value="">Semua unit</option>' + names.map((u) => `<option>${esc(u)}</option>`).join(''); $('jgUnit').value = names.includes(cur) ? cur : '';
-  const fu = $('jgUnit').value, q = $('jgSearch').value.trim().toLowerCase();
-  let units = jagaData.units.filter((x) => !fu || x.unit === fu);
-  units = units.map((x) => ({ unit: x.unit, orang: x.orang.filter((o) => !q || o.nama.toLowerCase().includes(q)) })).filter((x) => !q || x.orang.length);
+  const fu = $('jgUnit').value, fs = $('jgShift').value, view = $('jgView').value, q = $('jgSearch').value.trim().toLowerCase();
+  const keep = (o) => (!fs || o.shift === fs) && (!q || o.nama.toLowerCase().includes(q));
+  let units = jagaData.units.filter((x) => !fu || x.unit === fu).map((x) => ({ unit: x.unit, orang: x.orang.filter(keep) }));
+  const filtering = !!(fs || q);
+  if (filtering) units = units.filter((x) => x.orang.length);
   units.sort((a, b) => (b.unit === me.unit) - (a.unit === me.unit));
-  const total = jagaData.units.reduce((a, x) => a + x.orang.length, 0), aktif = jagaData.units.filter((x) => x.orang.length).length;
-  const byS = { P: 0, S: 0, D: 0, M: 0 }; jagaData.units.forEach((x) => x.orang.forEach((o) => { if (byS[o.shift] !== undefined) byS[o.shift]++; }));
-  $('jgSum').innerHTML = `<div><b>${total}</b><span>Sedang jaga</span></div><div><b>${aktif}</b><span>Unit ada petugas</span></div><div><b>${byS.P}/${byS.S}</b><span>Pagi / Siang</span></div><div><b>${byS.D}/${byS.M}</b><span>Middle / Malam</span></div>`;
+  const all = units.reduce((a, x) => a.concat(x.orang.map((o) => Object.assign({ unit: x.unit }, o))), []);
+  const byS = { P: 0, S: 0, D: 0, M: 0 }; all.forEach((o) => { if (byS[o.shift] !== undefined) byS[o.shift]++; });
+  $('jgSum').innerHTML = `<div><b>${all.length}</b><span>Sedang jaga</span></div><div><b>${units.filter((x) => x.orang.length).length}</b><span>Unit ada petugas</span></div><div><b>${byS.P}/${byS.S}</b><span>Pagi / Siang</span></div><div><b>${byS.D}/${byS.M}</b><span>Middle / Malam</span></div>`;
   $('jgAt').textContent = 'Terakhir: ' + (jagaData.now || '').substring(11, 19);
-  $('jgList').innerHTML = units.length ? units.map((x) => `<div class="glass card jg-unit"><h3><span>${esc(x.unit)}${x.unit === me.unit ? ' <span class="small dim">(unit Anda)</span>' : ''}</span><span class="jg-n ${x.orang.length ? '' : 'zero'}">${x.orang.length}</span></h3>${x.orang.length ? x.orang.map((o) => `<div class="jg-p"><div class="avatar">${esc(o.nama.charAt(0).toUpperCase())}</div><div class="grow"><div class="t">${esc(o.nama)}${o.userId === me.id ? ' <span class="small dim">(Anda)</span>' : ''}</div><div class="small dim">masuk ${esc(o.jamMasuk)}${o.tanggal !== jagaData.now.substring(0, 10) ? ' · ' + fmtDate(o.tanggal) : ''}</div></div><span class="tag tag-${esc(o.shift)}" title="${esc(SHIFT_NAME[o.shift] || '')}">${esc(SHIFT_NAME[o.shift] || o.shift)}</span>${o.hp ? `<a class="jg-wa" target="_blank" rel="noopener" href="${waLink(o.hp, 'Assalamualaikum ' + o.nama + ', ')}">WA</a>` : ''}</div>`).join('') : '<div class="small dim">Tidak ada petugas tercatat jaga saat ini.</div>'}</div>`).join('') : '<div class="empty">Tidak ada data.</div>';
+  if (view === 'shift') {
+    const order = ['P', 'S', 'D', 'M'];
+    $('jgList').innerHTML = order.filter((k) => !fs || k === fs).map((k) => {
+      const list = all.filter((o) => o.shift === k).sort((a, b) => (a.unit < b.unit ? -1 : a.unit > b.unit ? 1 : a.nama < b.nama ? -1 : 1));
+      return `<div class="glass card jg-unit"><h3><span><span class="tag tag-${k}">${SHIFT_NAME[k]}</span></span><span class="jg-n ${list.length ? '' : 'zero'}">${list.length}</span></h3>${list.length ? list.map((o) => jgPerson(o, o.unit)).join('') : '<div class="small dim">Tidak ada petugas pada shift ini.</div>'}</div>`;
+    }).join('');
+  } else {
+    $('jgList').innerHTML = units.length ? units.map((x) => `<div class="glass card jg-unit"><h3><span>${esc(x.unit)}${x.unit === me.unit ? ' <span class="small dim">(unit Anda)</span>' : ''}</span><span class="jg-n ${x.orang.length ? '' : 'zero'}">${x.orang.length}</span></h3>${x.orang.length ? x.orang.map((o) => jgPerson(o, '')).join('') : '<div class="small dim">Tidak ada petugas tercatat jaga saat ini.</div>'}</div>`).join('') : '<div class="empty">Tidak ada data.</div>';
+  }
 }
-$('jgRefresh').addEventListener('click', () => loadJaga()); $('jgUnit').addEventListener('change', renderJaga); $('jgSearch').addEventListener('input', renderJaga);
+$('jgRefresh').addEventListener('click', () => loadJaga()); $('jgUnit').addEventListener('change', renderJaga); $('jgShift').addEventListener('change', renderJaga); $('jgView').addEventListener('change', renderJaga); $('jgSearch').addEventListener('input', renderJaga);
 
 /* ---------------- ADMIN: MASTER UNIT ---------------- */
 function renderUnitAdmin() {

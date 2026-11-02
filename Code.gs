@@ -19,13 +19,14 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 4;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 5;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
   'fotoMasuk', 'fotoPulang', 'latMasuk', 'lngMasuk', 'latPulang', 'lngPulang', 'jarakMasuk', 'jarakPulang',
   'flag', 'serverMasuk', 'serverPulang', 'catatan', 'pulangId'];
-var LAPOR_HDR = ['id', 'tanggal', 'userId', 'nama', 'isi', 'updatedAt'];
+var LAPOR_HDR = ['id', 'tanggal', 'userId', 'nama', 'isi', 'updatedAt', 'shift'];   // laporan per tanggal + shift (shift kosong = laporan lama)
+var LAPOR_HARI = 7;              // laporan boleh diisi/diubah sampai 7 hari ke belakang
 var SHIFTS = ['P', 'S', 'D', 'M', 'L'];   // P=Pagi, S=Siang, D=Middle, M=Malam, L=Libur (lama, hanya koreksi)
 var SHIFTS_PICK = ['P', 'S', 'D', 'M'];
 var SH_UNIT = 'Unit';
@@ -292,6 +293,7 @@ function laporSheet_(key, create) {
   var name = PFX_LAPOR + key;
   var sh = ss.getSheetByName(name);
   if (!sh && create) sh = ensureSheet_(ss, name, LAPOR_HDR);
+  if (sh) ensureColumns_(sh, LAPOR_HDR);
   return sh;
 }
 function objToRow_(hdr, o) {
@@ -575,6 +577,7 @@ function actSignup_(p) {
   var pw = String(p.password || '');
   var email = String(p.email || '').trim().toLowerCase().substring(0, 100);
   var hp = normWa_(p.hp).substring(0, 20);
+  if (hp.length < 9) throw fail_('No. WhatsApp wajib diisi (dipakai untuk mengirim password baru).');
   if (nama.length < 3) throw fail_('Nama minimal 3 huruf.');
   if (!nip) throw fail_('NIP wajib diisi.');
   if (!unit) throw fail_('Unit wajib dipilih.');
@@ -615,7 +618,9 @@ function actLupa_(p) {
   var tmp = randomTempPw_();
   var f = findRowById_(sh, KARYAWAN_HDR, u.id);
   var viaEmail = false;
-  if (u.email) {
+  // WhatsApp diprioritaskan: bila ada no. WA, permintaan masuk antrean admin yang mengirim password sementara via WA.
+  // Email hanya dipakai bila karyawan tidak punya no. WA.
+  if (u.email && !u.hp) {
     f.o.tempHash = hash_(u.salt, tmp); f.o.tempExp = plusMinutesTs_(TEMP_PW_MENIT_EMAIL);
     writeRow_(sh, KARYAWAN_HDR, f.row, f.o); cache.remove('U:' + u.id);
     viaEmail = sendMail_(u.email, 'Password sementara - Absensi RSI At-Tin Husada',
@@ -904,24 +909,27 @@ function pubRecord_(o) {
 function actSaveLaporan_(u, p) {
   var tgl = String(p.tanggal || '');
   if (!validDate_(tgl)) throw fail_('Tanggal tidak valid.');
+  var shift = String(p.shift || '').toUpperCase();
+  if (SHIFTS.indexOf(shift) < 0) throw fail_('Pilih shift untuk laporan ini.');
   var today = nowJ_().substring(0, 10);
-  if (tgl > addDays_(today, 0) || tgl < addDays_(today, -3)) throw fail_('Laporan hanya bisa diisi untuk 3 hari terakhir.');
+  if (tgl > today || tgl < addDays_(today, -LAPOR_HARI)) throw fail_('Laporan hanya bisa diisi/diubah untuk ' + LAPOR_HARI + ' hari terakhir.');
   var isi = String(p.isi || '').substring(0, 4000).trim();
   if (!isi) throw fail_('Isi laporan masih kosong.');
   var sh = laporSheet_(periodKey_(tgl), true);
-  var id = u.id + '_' + tgl;
+  var id = u.id + '_' + tgl + '_' + shift;
   var f = findRowById_(sh, LAPOR_HDR, id);
-  var o = { id: id, tanggal: tgl, userId: u.id, nama: u.nama, isi: isi, updatedAt: nowJ_() };
+  var o = { id: id, tanggal: tgl, userId: u.id, nama: u.nama, isi: isi, updatedAt: nowJ_(), shift: shift };
   if (f) writeRow_(sh, LAPOR_HDR, f.row, o); else appendObj_(sh, LAPOR_HDR, o);
   return { ok: true };
 }
+/** Peta laporan: kunci userId_tanggal_shift (shift kosong = laporan lama sebelum ada pembagian shift). */
 function laporanMap_(key, userId) {
   var sh = laporSheet_(key, false);
   var m = {};
   if (!sh) return m;
   var rows = readAll_(sh);
   for (var i = 0; i < rows.length; i++) {
-    if (!userId || rows[i].userId === userId) m[rows[i].userId + '_' + rows[i].tanggal] = rows[i].isi;
+    if (!userId || rows[i].userId === userId) m[rows[i].userId + '_' + rows[i].tanggal + '_' + (rows[i].shift || '')] = rows[i].isi;
   }
   return m;
 }
@@ -944,13 +952,12 @@ function actState_(u) {
   var lap = laporanMap_(key, u.id);
   if (open && open.key !== key) { var l2 = laporanMap_(open.key, u.id); for (var kk in l2) lap[kk] = l2[kk]; }
   var cfg = getConfig_();
-  var lapTargets = {};
-  lapTargets[today] = lap[u.id + '_' + today] || '';
-  if (open) lapTargets[open.o.tanggal] = lap[u.id + '_' + open.o.tanggal] || '';
+  var lapAll = {};
+  for (var lk in lap) { var pp = lk.substring(u.id.length + 1); var tt = pp.substring(0, 10), ss2 = pp.substring(11); lapAll[tt + '_' + ss2] = lap[lk]; }
   return {
     me: pubUserFull_(u), now: now, today: today, period: periodRange_(key),
     open: open ? pubRecord_(open.o) : null, todayRecords: recs, olderOpen: yRec,
-    laporan: lapTargets, lokasi: cfg.lokasi, defaultRadius: DEFAULT_RADIUS, units: getUnits_(),
+    laporan: lapAll, lokasi: cfg.lokasi, defaultRadius: DEFAULT_RADIUS, units: getUnits_(),
     counts: u.role === 'admin' ? adminCounts_() : null
   };
 }
