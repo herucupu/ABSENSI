@@ -83,13 +83,14 @@ textarea{resize:vertical;min-height:130px;line-height:1.45;}
 .nav button{position:relative;}
 .badge{position:absolute;top:2px;right:calc(50% - 26px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
 .chip .cnt{display:inline-block;margin-left:6px;min-width:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;text-align:center;}
+.ro{opacity:.7;background:rgba(19,27,51,.05) !important;}
 .pw-big{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:700;letter-spacing:3px;text-align:center;padding:16px;border-radius:16px;background:rgba(255,255,255,.8);border:2px dashed var(--blue);margin:10px 0;user-select:all;}
 .menu{position:absolute;right:var(--pad);top:calc(var(--safe-t) + 70px);z-index:60;min-width:220px;padding:6px;}
 .menu button{display:flex;gap:10px;width:100%;text-align:left;background:none;border:none;padding:12px;border-radius:12px;font-weight:600;cursor:pointer;}
 .menu button:hover{background:rgba(19,27,51,.06);} .menu .danger{color:var(--red);}
 main{padding:14px var(--pad) calc(96px + var(--safe-b));max-width:760px;margin:0 auto;}
 .nav{position:fixed;left:10px;right:10px;bottom:calc(10px + var(--safe-b));z-index:40;display:flex;gap:4px;padding:6px;border-radius:24px;max-width:560px;margin:0 auto;}
-.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:none;background:none;border-radius:18px;color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;}
+.nav button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border:none;background:none;border-radius:18px;color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;}
 .nav button .ic{font-size:20px;line-height:1;}
 .nav button.active{color:#fff;background:linear-gradient(135deg,var(--blue-2),var(--blue));box-shadow:0 8px 16px -6px rgba(20,88,176,.7);}
 @media (min-width:900px){
@@ -116,7 +117,7 @@ main{padding:14px var(--pad) calc(96px + var(--safe-b));max-width:760px;margin:0
 .tag-P{background:linear-gradient(135deg,var(--teal),#17C7BE);} .tag-S{background:linear-gradient(135deg,var(--amber),#F0A84B);}
 .tag-M{background:linear-gradient(135deg,var(--violet),#9C82EA);} .tag-L{background:linear-gradient(135deg,#9AA6BD,#B7C0D1);color:#222;}
 .flag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin:2px 3px 0 0;background:rgba(224,138,43,.18);color:#9a5a10;border:1px solid rgba(224,138,43,.35);}
-.flag.bad{background:rgba(220,59,46,.14);color:#a12b1d;border-color:rgba(220,59,46,.35);} .flag.ok{background:rgba(31,191,134,.16);color:#0a7a50;border-color:rgba(31,191,134,.35);}
+.flag.bad{background:#fff;color:#8f2a1f;border-color:rgba(220,59,46,.6);} .flag.ok{background:rgba(31,191,134,.16);color:#0a7a50;border-color:rgba(31,191,134,.35);}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch;}
 .chip{flex:0 0 auto;padding:8px 14px;border-radius:20px;border:1px solid #fff;background:rgba(255,255,255,.65);font-weight:600;font-size:13px;cursor:pointer;}
 .chip.active{background:linear-gradient(135deg,var(--navy-2),var(--navy));color:#fff;}
@@ -149,12 +150,12 @@ td{padding:9px 6px;border-top:1px solid var(--line);} td.n,th.n{text-align:cente
 .photo-box{position:relative;border-radius:18px;overflow:hidden;background:rgba(19,27,51,.08);border:2px dashed rgba(19,27,51,.25);min-height:150px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .photo-box img{width:100%;display:block;max-height:34vh;object-fit:cover;} .photo-box .ph{text-align:center;color:var(--dim);padding:20px;}
 .gps{padding:10px 12px;border-radius:14px;font-size:13px;background:rgba(255,255,255,.6);border:1px solid #fff;}
-.gps.ok{background:rgba(31,191,134,.14);} .gps.warn{background:rgba(224,138,43,.16);} .gps.bad{background:rgba(220,59,46,.12);}
-.toast{position:fixed;left:50%;bottom:calc(100px + var(--safe-b));transform:translateX(-50%) translateY(10px);z-index:120;max-width:calc(100vw - 28px);padding:11px 18px;border-radius:14px;
-  background:rgba(19,27,51,.92);color:#fff;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:.2s;text-align:center;}
-.toast.show{opacity:1;transform:translateX(-50%);} .toast.err{background:rgba(190,45,35,.95);}
-.banner{padding:12px 14px;border-radius:16px;margin-bottom:12px;font-size:13.5px;background:rgba(224,138,43,.16);border:1px solid rgba(224,138,43,.4);}
-.banner.red{background:rgba(220,59,46,.12);border-color:rgba(220,59,46,.4);} .banner.blue{background:rgba(46,125,226,.12);border-color:rgba(46,125,226,.35);}
+.gps.ok{background:rgba(31,191,134,.14);} .gps.warn{background:rgba(224,138,43,.16);} .gps.bad{background:rgba(255,255,255,.9);border-left:5px solid var(--red);}
+.toast{position:fixed;left:50%;bottom:calc(100px + var(--safe-b));transform:translateX(-50%) translateY(10px);z-index:120;width:max-content;max-width:calc(100vw - 28px);padding:12px 18px;border-radius:14px;
+  background:#1D2A4D;color:#fff;font-weight:600;font-size:14px;line-height:1.45;opacity:0;pointer-events:none;transition:.2s;text-align:left;box-shadow:0 14px 30px -10px rgba(0,0,0,.45);}
+.toast.show{opacity:1;transform:translateX(-50%);} .toast.err{background:#FFFFFF;color:#1b1f33;border-left:6px solid var(--red);border-top:1px solid rgba(19,27,51,.1);}
+.banner{padding:12px 14px;border-radius:16px;margin-bottom:12px;font-size:13.5px;line-height:1.5;color:var(--ink);background:rgba(255,255,255,.92);border:1px solid rgba(19,27,51,.12);border-left:5px solid var(--amber);}
+.banner.red{background:rgba(255,255,255,.96);border-left-color:var(--red);} .banner.blue{background:rgba(255,255,255,.92);border-left-color:var(--blue-2);}
 .spin{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;} .spin.dk{border-color:rgba(19,27,51,.2);border-top-color:var(--blue);}
 @keyframes rot{to{transform:rotate(360deg)}}
 
@@ -166,7 +167,7 @@ td{padding:9px 6px;border-top:1px solid var(--line);} td.n,th.n{text-align:cente
 .linkbtn{background:none;border:none;color:var(--blue);font-weight:700;font-size:14px;cursor:pointer;padding:8px 4px;font-family:inherit;}
 .linkbtn:active{opacity:.6;}
 .login-card h1{text-align:center;font-size:22px;} .login-card .sub{text-align:center;color:var(--dim);margin:4px 0 18px;font-size:13.5px;}
-.err{display:none;background:#FDECEA;color:#A12B1D;border:1px solid #F3C1BB;padding:10px 12px;border-radius:12px;font-size:13px;margin-bottom:12px;font-weight:600;} .err.show{display:block;}
+.err{display:none;background:#fff;color:#1b1f33;border:1px solid rgba(19,27,51,.14);border-left:5px solid var(--red);padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;margin-bottom:12px;font-weight:600;} .err.show{display:block;}
 body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
 </style>
@@ -180,6 +181,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
     <h1>Absensi &amp; Laporan Harian</h1>
     <div class="sub">RSI At-Tin Husada Ngawi</div>
     <div class="banner red hidden" id="setupWarn">URL server belum diisi. Buka file index.html di editor teks, cari baris <b>const API_URL</b>, lalu isi dengan URL Web App Apps Script.</div>
+    <div class="banner hidden" id="verWarn">⚠ <b>Server (Code.gs) belum versi terbaru.</b> Tempel Code.gs yang baru di Apps Script, jalankan <b>setup</b>, lalu <b>Deploy &gt; New version</b>. Sebelum itu, fitur Daftar, Foto profil, dan Akun belum berfungsi.</div>
     <div class="err" id="loginErr"></div>
     <div class="field"><label>Username</label><input id="lgUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="username"></div>
     <div class="field"><label>Password</label><input id="lgPass" type="password" autocomplete="current-password" placeholder="password"></div>
@@ -197,6 +199,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
     <div class="user-chip" id="userChip"><div class="avatar" id="avatar">?</div><span id="chipName" class="small" style="font-weight:700;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span></div>
   </header>
   <div class="menu glass hidden" id="menu">
+    <button id="mnAkun">👤 Akun Saya</button>
     <button id="mnFoto">📷 Ganti Foto Profil</button>
     <button id="mnInstall">📲 Pasang di Layar Utama</button>
     <button id="mnPw">🔑 Ubah Password</button>
@@ -258,6 +261,29 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
       <button class="btn btn-primary btn-block" id="btnExport" style="padding:14px">⬇ Export Excel</button>
     </section>
 
+    <!-- AKUN -->
+    <section class="page hidden" id="pg-akun">
+      <div class="glass card" style="text-align:center">
+        <div class="avatar xl2" id="akAv" style="margin:0 auto 10px;width:112px;height:112px;font-size:42px"></div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700" id="akNamaTop">—</div>
+        <div class="small dim" id="akSub">—</div>
+        <button class="btn btn-sm" id="akFoto" style="margin-top:12px">📷 Ganti foto profil</button>
+      </div>
+      <div class="glass card"><h3>👤 Data Pribadi</h3>
+        <div class="field"><label>Nama lengkap</label><input id="akNama" autocomplete="name"></div>
+        <div class="row"><div class="field grow"><label>Email</label><input id="akEmail" type="email" autocapitalize="none" placeholder="untuk reset password"></div><div class="field grow"><label>WhatsApp</label><input id="akHp" inputmode="tel" placeholder="0812xxxxxxx"></div></div>
+        <div class="row"><div class="field grow"><label>NIP</label><input id="akNip" class="ro" readonly></div><div class="field grow"><label>Unit</label><input id="akUnit" class="ro" readonly></div></div>
+        <div class="row"><div class="field grow"><label>Username</label><input id="akUser" class="ro" readonly></div><div class="field grow"><label>Peran</label><input id="akRole" class="ro" readonly></div></div>
+        <div class="small dim" style="margin-bottom:12px">NIP, unit, username, dan peran diubah oleh admin. Hubungi admin bila ada yang keliru.</div>
+        <button class="btn btn-teal btn-block" id="akSave" style="padding:14px">Simpan Perubahan</button>
+      </div>
+      <div class="glass card"><h3>🔒 Keamanan &amp; Aplikasi</h3>
+        <button class="btn btn-block" id="akPw" style="margin-bottom:8px">🔑 Ubah Password</button>
+        <button class="btn btn-block" id="akInstall" style="margin-bottom:8px">📲 Pasang di Layar Utama</button>
+        <button class="btn btn-block" id="akOut">⎋ Keluar</button>
+      </div>
+    </section>
+
     <!-- ADMIN -->
     <section class="page hidden" id="pg-admin">
       <div class="chips"><button class="chip active" data-a="kar">👥 Karyawan</button><button class="chip" data-a="app">🆕 Persetujuan<span class="cnt hidden" id="cntApp"></span></button><button class="chip" data-a="res">🔑 Reset Password<span class="cnt hidden" id="cntRes"></span></button><button class="chip" data-a="set">⚙️ Lokasi &amp; Pengaturan</button></div>
@@ -314,7 +340,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 /* ============================================================
    KONFIGURASI — isi dengan URL Web App Apps Script Anda
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbz9715zBzVtN-P4t0mThvNxsDeRv-iPiWm-W-51Oh9SHnmwsq9c1nOZ5kSl9BHOaHo/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby1fsJgozcfeD8ZUhAgDfCIRtIGATyCUx9S_CM-qOS6CQWMJFXkCBX96qy4v-1DtPoV/exec";
 
 /* ---------------- util ---------------- */
 const $ = (id) => document.getElementById(id);
@@ -348,7 +374,12 @@ function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classNam
 /* ---------------- API ---------------- */
 const API_READY = API_URL && API_URL.indexOf('PASTE_URL') < 0;
 let pubInfo = { waAdmin: '' };
-async function loadPubInfo() { if (!API_READY) return; try { pubInfo = await apiGet('infoPublik', { token: '' }); } catch (e) { /* abaikan */ } }
+const NEED_VER = 3;
+async function loadPubInfo() {
+  if (!API_READY) return;
+  try { pubInfo = await apiGet('infoPublik', { token: '' }); if (!pubInfo.ver || pubInfo.ver < NEED_VER) $('verWarn').classList.remove('hidden'); }
+  catch (e) { if (/belum diperbarui|tidak dikenal/i.test(e.message)) $('verWarn').classList.remove('hidden'); }
+}
 let authToken = '', me = null;
 const AUTH_KEY = 'absensi_rsi_auth';
 async function apiGet(action, params) {
@@ -360,16 +391,29 @@ async function apiGet(action, params) {
   if (!res.ok) throw new Error('Server error (' + res.status + ')');
   let j; try { j = JSON.parse(await res.text()); } catch (e) { throw new Error('Respons server tidak valid. Pastikan deployment Apps Script sudah "New version".'); }
   if (j && j.error === 'UNAUTHORIZED') { forceLogout('Sesi berakhir. Silakan masuk lagi.'); throw new Error('Sesi berakhir'); }
-  if (j && j.error) throw new Error(j.error);
+  if (j && j.error) throw new Error(friendlyServerError(j.error));
   return j;
 }
-/** Kirim data. Balasan Apps Script tidak bisa dibaca (CORS), jadi hasilnya diverifikasi lewat GET. */
+/** Pesan error server yang ramah. */
+function friendlyServerError(msg) {
+  if (/Aksi tidak dikenal/.test(msg)) return 'Server belum diperbarui (Code.gs lama). Tempel Code.gs terbaru di Apps Script, jalankan setup, lalu Deploy > New version.';
+  return msg;
+}
+/** Kirim data. Mencoba membaca balasan server (agar pesan error asli tampil); bila browser memblokir pembacaan
+ *  (CORS), kirim ulang mode 'no-cors' dan hasilnya diverifikasi lewat GET. Semua aksi aman diulang (idempoten). */
 async function apiPost(action, data) {
   if (!API_READY) throw new Error('API_URL belum diisi di index.html');
   const body = JSON.stringify(Object.assign({ action, token: authToken }, data));
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+    const text = await res.text(); let j = null; try { j = JSON.parse(text); } catch (e) { j = null; }
+    if (j && j.error === 'UNAUTHORIZED') { forceLogout('Sesi berakhir. Silakan masuk lagi.'); throw Object.assign(new Error('Sesi berakhir'), { serverError: true }); }
+    if (j && j.error) throw Object.assign(new Error(friendlyServerError(j.error)), { serverError: true });
+    if (j) return { readable: true, data: j };
+  } catch (e) { if (e.serverError) throw e; /* CORS/jaringan: lanjut ke mode no-cors */ }
   let last;
   for (let i = 0; i < 3; i++) {
-    try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body }); return true; }
+    try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body }); return { readable: false }; }
     catch (e) { last = e; await sleep(1200); }
   }
   throw new Error('Tidak bisa terhubung ke server. Periksa internet Anda.');
@@ -383,7 +427,8 @@ async function waitFor(fetcher, pred, tries) {
   return null;
 }
 async function sendAndConfirm(action, data, fetcher, pred) {
-  await apiPost(action, data);
+  const r = await apiPost(action, data);
+  if (r.readable) { try { const d = await fetcher(); if (pred(d)) return d; } catch (e) { if (e.message === 'Sesi berakhir') throw e; } }
   return await waitFor(fetcher, pred);
 }
 /** Pesan error asli server (mis. "Belum absen pulang") hanya bisa dibaca lewat verifikasi; beri petunjuk bila tidak terkonfirmasi. */
@@ -439,6 +484,7 @@ function buildNav() {
   const items = [['home', '🏠', 'Beranda'], ['laporan', '📝', 'Laporan'], ['riwayat', '🕘', 'Riwayat']];
   if (me.role === 'atasan' || me.role === 'admin') items.push(['tim', '👥', 'Tim']);
   if (me.role === 'admin') items.push(['admin', '⚙️', 'Admin']);
+  items.push(['akun', '👤', 'Akun']);
   $('nav').innerHTML = items.map((i) => `<button data-p="${i[0]}"><span class="ic">${i[1]}</span>${i[2]}</button>`).join('');
   $('nav').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => go(b.dataset.p)));
 }
@@ -447,7 +493,7 @@ function go(p) {
   document.querySelectorAll('.page').forEach((x) => x.classList.toggle('hidden', x.id !== 'pg-' + p));
   $('nav').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.p === p));
   $('menu').classList.add('hidden'); window.scrollTo(0, 0);
-  if (p === 'home') refreshHome(); else if (p === 'laporan') initLaporan(); else if (p === 'riwayat') loadRiwayat(); else if (p === 'tim') loadTim(); else if (p === 'admin') initAdmin();
+  if (p === 'home') refreshHome(); else if (p === 'laporan') initLaporan(); else if (p === 'riwayat') loadRiwayat(); else if (p === 'tim') loadTim(); else if (p === 'admin') initAdmin(); else if (p === 'akun') renderAkun();
 }
 
 /* ---------------- avatar & foto profil ---------------- */
@@ -619,7 +665,7 @@ $('abSend').addEventListener('click', async () => {
   abBusy = false; updateSend();
 });
 async function confirmAbsen(action, payload) {
-  await apiPost(action, payload);
+  await apiPost(action, payload);   // error server (mis. masih ada absen terbuka) dilempar apa adanya
   const prevOpenId = S && S.open ? S.open.id : null;
   const st = await waitFor(loadState, (s) => action === 'masuk' ? (s.open && s.open.id === payload.id)
     : (!s.open && (s.todayRecords.some((r) => r.id === prevOpenId && r.jamPulang) || true)), 9);
@@ -856,14 +902,17 @@ $('btnSaveSet').addEventListener('click', async () => {
 /* ---------------- akun ---------------- */
 $('userChip').addEventListener('click', (e) => { e.stopPropagation(); $('menu').classList.toggle('hidden'); });
 document.addEventListener('click', () => $('menu').classList.add('hidden'));
-$('mnOut').addEventListener('click', async () => { clearAuth(); stopClock(); document.body.classList.remove('authed'); $('menu').classList.add('hidden'); });
+function doLogout() { clearAuth(); stopClock(); document.body.classList.remove('authed'); $('menu').classList.add('hidden'); window.scrollTo(0, 0); }
+$('mnOut').addEventListener('click', doLogout);
+$('mnAkun').addEventListener('click', () => go('akun'));
 $('mnPw').addEventListener('click', () => openPasswordSheet(false));
-$('mnInstall').addEventListener('click', () => {
+function openInstallSheet() {
   openGen(`<h2>📲 Pasang di Layar Utama</h2><div class="banner blue"><b>iPhone (Safari):</b> ketuk tombol <b>Bagikan</b> (kotak berpanah) → <b>Tambah ke Layar Utama</b> → Tambah.</div>
     <div class="banner blue"><b>Android (Chrome):</b> ketuk menu <b>⋮</b> → <b>Instal aplikasi</b> / <b>Tambahkan ke layar utama</b>.</div>
     <div class="small dim">Setelah dipasang, ikon "Absensi RSI" muncul seperti aplikasi biasa dan terbuka layar penuh. Izinkan akses <b>Kamera</b> dan <b>Lokasi</b> saat diminta.</div>
     <div class="foot"><button class="btn" onclick="closeGen()">Tutup</button></div>`);
-});
+}
+$('mnInstall').addEventListener('click', openInstallSheet);
 function openPasswordSheet(force) {
   openGen(`<h2>🔑 ${force ? 'Buat Password Baru' : 'Ubah Password'}</h2>${force ? '<div class="banner">Demi keamanan, ganti password awal Anda sekarang.</div>' : ''}
     <div class="field"><label>Password lama</label><input id="pwOld" type="password" autocomplete="current-password"></div>
@@ -958,7 +1007,7 @@ function openLupa() {
 $('lnSignup').addEventListener('click', openSignup); $('lnLupa').addEventListener('click', openLupa);
 
 /* ---------------- GANTI FOTO PROFIL ---------------- */
-$('mnFoto').addEventListener('click', () => {
+function openFotoSheet() {
   let np = '';
   openGen(`<h2>📷 Foto Profil</h2><div style="text-align:center"><div class="avatar xl2" id="fpAv" style="margin:6px auto 10px;width:120px;height:120px;font-size:44px"></div>
     <button class="btn btn-sm" id="fpPick">Pilih foto baru</button><input type="file" id="fpFile" accept="image/*" class="hidden"></div>
@@ -968,10 +1017,11 @@ $('mnFoto').addEventListener('click', () => {
   $('fpFile').addEventListener('change', async (e) => { const f = e.target.files[0]; if (!f) return; try { np = await compressSquare(f, 160); setAvatar($('fpAv'), np, ''); $('fpSave').disabled = false; } catch (err) { toast('Foto gagal diproses', true); } e.target.value = ''; });
   $('fpSave').addEventListener('click', async () => {
     if (!np) return; $('fpSave').disabled = true; $('fpSave').innerHTML = '<span class="spin"></span>';
-    try { const r = await sendAndConfirm('saveFotoProfil', { foto: np }, loadState, (s) => s.me.foto === np); if (r) { closeGen(); toast('✅ Foto profil diperbarui'); renderHome(); saveAuth(!!localStorage.getItem(AUTH_KEY)); } else { toast(NOT_CONFIRMED, true); $('fpSave').disabled = false; $('fpSave').textContent = 'Simpan'; } }
+    try { const r = await sendAndConfirm('saveFotoProfil', { foto: np }, loadState, (s) => s.me.foto === np); if (r) { closeGen(); toast('✅ Foto profil diperbarui'); renderHome(); if (currentPage === 'akun') renderAkun(); saveAuth(!!localStorage.getItem(AUTH_KEY)); } else { toast(NOT_CONFIRMED, true); $('fpSave').disabled = false; $('fpSave').textContent = 'Simpan'; } }
     catch (e) { toast(e.message, true); $('fpSave').disabled = false; $('fpSave').textContent = 'Simpan'; }
   });
-});
+}
+$('mnFoto').addEventListener('click', openFotoSheet);
 
 /* ---------------- ADMIN: persetujuan & reset ---------------- */
 let pendRows = [], resRows = [];
@@ -1012,6 +1062,32 @@ async function makeTemp(userId, btn) {
     loadResets(); loadState().then(updateBadges).catch(() => {});
   } catch (e) { toast(e.message, true); if (btn) { btn.disabled = false; btn.textContent = '🔑 Buat password sementara'; } }
 }
+
+/* ---------------- AKUN SAYA ---------------- */
+function normWaJs(v) { let d = String(v || '').replace(/[^0-9]/g, ''); if (!d) return ''; if (d[0] === '0') d = '62' + d.slice(1); return d; }
+const ROLE_NAME = { karyawan: 'Karyawan', atasan: 'Atasan', admin: 'Admin' };
+function renderAkun() {
+  setAvatar($('akAv'), me.foto, me.nama);
+  $('akNamaTop').textContent = me.nama; $('akSub').textContent = (me.unit || '—') + ' · ' + (ROLE_NAME[me.role] || me.role);
+  $('akNama').value = me.nama || ''; $('akEmail').value = me.email || ''; $('akHp').value = me.hp || '';
+  $('akNip').value = me.nip || '—'; $('akUnit').value = me.unit || '—'; $('akUser').value = me.username || ''; $('akRole').value = ROLE_NAME[me.role] || me.role;
+}
+$('akFoto').addEventListener('click', openFotoSheet); $('akPw').addEventListener('click', () => openPasswordSheet(false));
+$('akInstall').addEventListener('click', openInstallSheet); $('akOut').addEventListener('click', doLogout);
+$('akSave').addEventListener('click', async () => {
+  const nama = $('akNama').value.trim(), email = $('akEmail').value.trim().toLowerCase(), hp = $('akHp').value.trim();
+  if (nama.length < 3) return toast('Nama minimal 3 huruf', true);
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Format email tidak valid', true);
+  const b = $('akSave'); b.disabled = true; b.innerHTML = '<span class="spin"></span> Menyimpan…';
+  try {
+    const r = await sendAndConfirm('saveProfil', { nama, email, hp }, loadState, (st) => st.me.nama === nama && (st.me.email || '') === email && (st.me.hp || '') === normWaJs(hp));
+    if (r) {
+      $('chipName').textContent = (me.nama || '').split(' ')[0]; $('topSub').textContent = me.nama + ' · ' + (me.unit || '—');
+      saveAuth(!!localStorage.getItem(AUTH_KEY)); renderHome(); renderAkun(); toast('✅ Data pribadi tersimpan');
+    } else toast(NOT_CONFIRMED, true);
+  } catch (e) { toast(e.message, true); }
+  b.disabled = false; b.textContent = 'Simpan Perubahan';
+});
 
 /* ---------------- init ---------------- */
 $('btnLogin').addEventListener('click', doLogin);

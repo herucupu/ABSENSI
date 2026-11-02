@@ -19,6 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
+var API_VERSION = 3;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -440,7 +441,7 @@ function actCekDaftar_(p) {
   }
   return { status: null };
 }
-function actInfoPublik_() { var c = getConfig_(); return { waAdmin: c.waAdmin || '' }; }
+function actInfoPublik_() { var c = getConfig_(); return { waAdmin: c.waAdmin || '', ver: API_VERSION }; }
 function actSignup_(p) {
   var cache = CacheService.getScriptCache();
   var cnt = +(cache.get('SUN') || 0);
@@ -572,6 +573,20 @@ function actResetBuat_(u, p) {
 function actSaveFotoProfil_(u, p) {
   if (!validFotoProfil_(p.foto)) throw fail_('Foto profil tidak valid.');
   setFoto_(u.id, String(p.foto));
+  return { ok: true };
+}
+/** Karyawan mengubah data pribadinya sendiri (NIP, unit, username, peran hanya bisa diubah admin). */
+function actSaveProfil_(u, p) {
+  var nama = String(p.nama || '').trim().substring(0, 80);
+  var email = String(p.email || '').trim().toLowerCase().substring(0, 100);
+  if (nama.length < 3) throw fail_('Nama minimal 3 huruf.');
+  if (!validEmail_(email)) throw fail_('Format email tidak valid.');
+  var sh = karSheet_();
+  var f = findRowById_(sh, KARYAWAN_HDR, u.id);
+  if (!f) throw fail_('Akun tidak ditemukan.');
+  f.o.nama = nama; f.o.email = email; f.o.hp = normWa_(p.hp).substring(0, 20);
+  writeRow_(sh, KARYAWAN_HDR, f.row, f.o);
+  CacheService.getScriptCache().remove('U:' + u.id);
   return { ok: true };
 }
 function actProfilFoto_(u, p) {
@@ -1080,6 +1095,7 @@ function doPost(e) {
       case 'karyawanImport': r = actKaryawanImport_(u, p); break;
       case 'karyawanApprove': r = actApprove_(u, p); break;
       case 'saveFotoProfil': r = actSaveFotoProfil_(u, p); break;
+      case 'saveProfil': r = actSaveProfil_(u, p); break;
       default: r = { error: 'Aksi tidak dikenal: ' + p.action };
     }
     return out_(r);
