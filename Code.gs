@@ -19,7 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 8;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 9;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -634,8 +634,7 @@ function actLupa_(p) {
   if (u.hp && waToken_()) {
     f.o.tempHash = hash_(u.salt, tmp); f.o.tempExp = plusMinutesTs_(TEMP_PW_MENIT_EMAIL);
     writeRow_(sh, KARYAWAN_HDR, f.row, f.o); cache.remove('U:' + u.id);
-    viaWa = sendWa_(u.hp, 'Absensi RSI At-Tin Husada\n\nHalo ' + u.nama + ', permintaan reset password diterima.\nUsername: ' + u.username + '\nPassword sementara: ' + tmp +
-      '\nBerlaku ' + TEMP_PW_MENIT_EMAIL + ' menit. Login memakai password ini lalu buat password baru.\nPassword lama tetap berlaku. Jika bukan Anda yang meminta, abaikan pesan ini.');
+    viaWa = sendWa_(u.hp, 'Assalamualaikum ' + u.nama + ',\n\nPASSWORD SEMENTARA AKUN ABSENSI\n- Username: ' + u.username + '\n- Password sementara: ' + tmp + '\n- Berlaku: ' + TEMP_PW_MENIT_EMAIL + ' menit\n\nCARA MASUK\n1. Buka aplikasi Absensi, login dengan username dan password sementara di atas.\n2. Buat password baru saat diminta.\n\nPassword lama Anda tetap berlaku sampai Anda login dengan password sementara. Jika bukan Anda yang meminta, abaikan pesan ini dan jangan bagikan ke siapa pun.\n\nTerima kasih.\nRSI At-Tin Husada Ngawi');
     if (!viaWa) { f.o.tempHash = ''; f.o.tempExp = ''; writeRow_(sh, KARYAWAN_HDR, f.row, f.o); cache.remove('U:' + u.id); }
   }
   if (viaWa) return { ok: true };
@@ -757,11 +756,13 @@ function actProfilFoto_(u, p) {
 /* ====================== CONFIG ====================== */
 function getConfig_() {
   var rows = readAll_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SH_CONFIG));
-  var c = { lokasi: [], retensiFotoHari: 90, waAdmin: '' };
+  var c = { lokasi: [], retensiFotoHari: 90, waAdmin: '', semangat: '', semangatTgl: '' };
   for (var i = 0; i < rows.length; i++) {
     if (rows[i].key === 'lokasi') { try { c.lokasi = JSON.parse(rows[i].value) || []; } catch (e) { c.lokasi = []; } }
     if (rows[i].key === 'retensiFotoHari') c.retensiFotoHari = parseInt(rows[i].value, 10) || 90;
     if (rows[i].key === 'waAdmin') c.waAdmin = rows[i].value;
+    if (rows[i].key === 'semangat') c.semangat = String(rows[i].value || '');
+    if (rows[i].key === 'semangatTgl') c.semangatTgl = String(rows[i].value || '');
   }
   return c;
 }
@@ -773,6 +774,15 @@ function setConfigKey_(key, value) {
   }
   sh.getRange(sh.getLastRow() + 1, 1, 1, 2).setNumberFormat('@').setValues([[key, String(value)]]);
 }
+/** Kata semangat di beranda (diganti admin, boleh tiap hari). */
+function actSaveSemangat_(u, p) {
+  if (u.role !== 'admin') throw fail_('Hanya admin.');
+  var t = String(p.teks || '').replace(/\s+/g, ' ').trim().substring(0, 300);
+  setConfigKey_('semangat', t);
+  setConfigKey_('semangatTgl', Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd'));
+  return { ok: true };
+}
+function actSemangat_() { var c = getConfig_(); return { teks: c.semangat || '', tgl: c.semangatTgl || '' }; }
 function actSaveConfig_(u, p) {
   if (u.role !== 'admin') throw fail_('Hanya admin.');
   var lok = [];
@@ -1232,6 +1242,7 @@ function doGet(e) {
         try { return out_(actResetBuat_(u, p)); } finally { try { lk.releaseLock(); } catch (e3) { /* tidak terkunci */ } }
       case 'config': { var cfgOut = getConfig_(); cfgOut.waGatewaySet = !!waToken_(); return out_(cfgOut); }
       case 'jaga': return out_(actJaga_(u));
+      case 'semangat': return out_(actSemangat_());
       default: return out_({ error: 'Aksi tidak dikenal: ' + a });
     }
   } catch (err) {
@@ -1257,6 +1268,7 @@ function doPost(e) {
       case 'saveLaporan': r = actSaveLaporan_(u, p); break;
       case 'koreksi': r = actKoreksi_(u, p); CacheService.getScriptCache().remove('JAGA'); break;
       case 'saveConfig': r = actSaveConfig_(u, p); break;
+      case 'saveSemangat': r = actSaveSemangat_(u, p); break;
       case 'karyawanSave': r = actKaryawanSave_(u, p); break;
       case 'karyawanImport': r = actKaryawanImport_(u, p); break;
       case 'karyawanApprove': r = actApprove_(u, p); break;

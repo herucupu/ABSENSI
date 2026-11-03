@@ -379,6 +379,31 @@ a.jg-wa svg{width:23px;height:23px;fill:#fff;}
 .ar-ic{flex:0 0 auto;width:42px;height:42px;border-radius:15px;display:grid;place-items:center;font-size:19px;color:#fff;box-shadow:0 10px 14px -8px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.5) inset;}
 .ar-ic.a1{background:linear-gradient(145deg,#ffd35c,#e0a010);} .ar-ic.a2{background:linear-gradient(145deg,#4c9bf0,#1458b0);} .ar-ic.a3{background:linear-gradient(145deg,#f58a8a,#d83a3a);}
 .act-row.out b{color:#b3261e;}
+/* ===== v11 ===== */
+.sep{font-style:normal;font-weight:400;margin:0 .55em;opacity:.45;}
+.quote{display:flex;align-items:center;gap:13px;padding:14px 15px !important;margin-bottom:14px;background:linear-gradient(135deg,rgba(255,244,224,.97),rgba(255,226,190,.9) 55%,rgba(255,255,255,.85)) !important;}
+.q-ic{flex:0 0 auto;width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font-size:24px;background:linear-gradient(145deg,#ffae5c,#e8650a);box-shadow:0 12px 16px -8px rgba(232,101,10,.8),0 1px 0 rgba(255,255,255,.55) inset;}
+.q-ttl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#b5540a;}
+.q-tx{font-size:15px;font-weight:600;line-height:1.45;color:#2b2540;margin-top:2px;overflow-wrap:anywhere;} .q-dt{font-size:11.5px;color:#8a6a4a;margin-top:4px;}
+/* unit di Jaga: lebih kalem, bergradasi */
+.page .glass.card.jg-unit h3{background:linear-gradient(120deg,#8fbdef,#4a82cb 80%);box-shadow:0 12px 18px -12px rgba(20,88,176,.6),0 1px 0 rgba(255,255,255,.55) inset;text-shadow:0 1px 2px rgba(0,30,80,.3);}
+.page .glass.card.jg-unit:nth-of-type(4n+2) h3{background:linear-gradient(120deg,#8fdcd5,#3aa8a1 80%);box-shadow:0 12px 18px -12px rgba(14,163,157,.55),0 1px 0 rgba(255,255,255,.55) inset;}
+.page .glass.card.jg-unit:nth-of-type(4n+3) h3{background:linear-gradient(120deg,#c3b6f2,#8a72d4 80%);box-shadow:0 12px 18px -12px rgba(109,75,208,.55),0 1px 0 rgba(255,255,255,.55) inset;}
+.page .glass.card.jg-unit:nth-of-type(4n+4) h3{background:linear-gradient(120deg,#f7cfa0,#e49a52 80%);box-shadow:0 12px 18px -12px rgba(232,101,10,.5),0 1px 0 rgba(255,255,255,.55) inset;}
+.jg-unit h3 .tag{box-shadow:none;}
+/* rincian shift: kontras jelas */
+.tag.sc,.tag.mini{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);}
+.tag.sc.tag-P,.tag.mini.tag-P{background:linear-gradient(135deg,#0a7d78,#12a8a0);}
+.tag.sc.tag-S,.tag.mini.tag-S{background:linear-gradient(135deg,#a85a08,#d9820f);}
+.tag.sc.tag-D,.tag.mini.tag-D{background:linear-gradient(135deg,#1250a6,#2f7fe0);}
+.tag.sc.tag-M,.tag.mini.tag-M{background:linear-gradient(135deg,#4f33b8,#7a5bd8);}
+.tag.sc b{background:rgba(0,0,0,.22);color:#fff;text-shadow:none;} .tag.sc.zero{opacity:.72;}
+/* akun: foto latar penuh */
+.ak-cover{background:linear-gradient(180deg,rgba(6,28,84,.5),rgba(6,28,84,.8)),var(--rsi-photo) 62% 50%/cover no-repeat !important;}
+.ak-banner{display:none;} .ak-body{margin-top:0;padding:26px 16px 22px;}
+.ak-name{color:#fff;text-shadow:0 2px 6px rgba(0,10,40,.6);}
+.ak-chip{box-shadow:0 8px 12px -8px rgba(0,0,0,.6),0 1px 0 #fff inset;}
+#jgSum span{white-space:nowrap;letter-spacing:.2px;} #jgSum span .sep{margin:0 .3em;}
 body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
 </style>
@@ -433,6 +458,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
           <div><b id="hDur">—</b><span>Durasi</span></div>
         </div>
       </div>
+      <div class="glass card quote hidden" id="hQuote"><div class="q-ic">💪</div><div class="grow"><div class="q-ttl">Semangat Hari Ini</div><div class="q-tx" id="hQuoteTx"></div><div class="q-dt" id="hQuoteDt"></div></div></div>
       <div id="olderBanner"></div>
       <div class="act-grid" id="absenAction">
         <button class="act-tile act-in" id="btnMasuk"><span class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><b>Absen Masuk</b><small id="tlMasuk">Klik untuk absen saat datang kerja</small></button>
@@ -542,6 +568,11 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
           <div id="lokList"></div>
           <div class="row wrap" style="margin-top:8px"><button class="btn btn-sm" id="lokAdd">+ Tambah titik</button><button class="btn btn-sm" id="lokHere">📍 Pakai lokasi saya</button></div>
         </div>
+        <div class="glass card"><h3>💪 Kata Semangat Beranda</h3>
+          <div class="field"><label>Kalimat untuk semua karyawan (tampil di Beranda)</label><textarea id="setSemangat" maxlength="300" style="min-height:96px" placeholder="mis. Terima kasih sudah bekerja dengan sepenuh hati. Semangat melayani!"></textarea></div>
+          <div class="small dim" style="margin-bottom:10px"><span id="semCnt">0</span>/300 huruf. Ganti kapan saja, tersimpan langsung tanpa menunggu tombol Simpan Pengaturan. Kosongkan lalu simpan untuk menyembunyikan.</div>
+          <button class="btn btn-teal btn-block" id="semSave">Simpan Kata Semangat</button>
+        </div>
         <div class="glass card"><h3>💬 WhatsApp Admin</h3>
           <div class="field"><label>Nomor WhatsApp admin (untuk tombol "Hubungi admin")</label><input id="setWa" inputmode="tel" placeholder="mis. 0812xxxxxxx"></div>
           <div class="small dim">Dipakai di halaman login (Daftar &amp; Lupa password) agar karyawan bisa menghubungi admin lewat WhatsApp.</div>
@@ -587,7 +618,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 /* ============================================================
    KONFIGURASI — isi dengan URL Web App Apps Script Anda
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbxtRnhuuQOyZ6A6OPyyrzokSmtoch02TzvmA9n6hFj_K8MrFoSmS4aP6n5CLvJMwJS2/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyKnbTyXBhmptMl_oDG_wpfcbolAM0zkvgxUH_RuaVOUFTYwdl3HdOa9gz9MgQN0l36/exec";
 
 /* ---------------- util ---------------- */
 const $ = (id) => document.getElementById(id);
@@ -622,7 +653,7 @@ function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classNam
 /* ---------------- API ---------------- */
 const API_READY = API_URL && API_URL.indexOf('PASTE_URL') < 0;
 let pubInfo = { waAdmin: '' };
-const NEED_VER = 8;
+const NEED_VER = 9;
 async function loadPubInfo() {
   if (!API_READY) return;
   try { pubInfo = await apiGet('infoPublik', { token: '' }); if (!pubInfo.ver || pubInfo.ver < NEED_VER) $('verWarn').classList.remove('hidden'); }
@@ -754,12 +785,18 @@ function buildNav() {
   $('nav').innerHTML = items.map((i) => `<button data-p="${i[0]}"><span class="ic">${i[1]}</span>${i[2]}</button>`).join('');
   $('nav').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => go(b.dataset.p)));
 }
+let semAt = 0;
+function showSemangat(r) {
+  const t = (r && r.teks) || ''; $('hQuote').classList.toggle('hidden', !t); $('hQuoteTx').textContent = t;
+  $('hQuoteDt').textContent = t && r.tgl ? 'Dari admin · ' + fmtDate(r.tgl) : '';
+}
+async function loadSemangat() { if (Date.now() - semAt < 120000) return; try { const r = await apiGet('semangat'); semAt = Date.now(); showSemangat(r); } catch (e) { /* server lama: kartu disembunyikan */ } }
 function go(p) {
   currentPage = p;
   document.querySelectorAll('.page').forEach((x) => x.classList.toggle('hidden', x.id !== 'pg-' + p));
   $('nav').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.p === p));
   $('menu').classList.add('hidden'); window.scrollTo(0, 0);
-  if (p === 'home') refreshHome(); else if (p === 'laporan') initLaporan(); else if (p === 'riwayat') loadRiwayat(); else if (p === 'tim') loadTim(); else if (p === 'admin') initAdmin(); else if (p === 'akun') renderAkun(); else if (p === 'jaga') loadJaga();
+  if (p === 'home') { refreshHome(); loadSemangat(); } else if (p === 'laporan') initLaporan(); else if (p === 'riwayat') loadRiwayat(); else if (p === 'tim') loadTim(); else if (p === 'admin') initAdmin(); else if (p === 'akun') renderAkun(); else if (p === 'jaga') loadJaga();
   clearInterval(jagaT); jagaT = null; if (p === 'jaga') jagaT = setInterval(() => { if (!document.hidden) loadJaga(true); }, 30000);
 }
 
@@ -1206,7 +1243,16 @@ $('kyImport').addEventListener('click', () => {
     } catch (e) { toast(e.message, true); $('imGo').disabled = false; $('imGo').textContent = 'Impor'; }
   });
 });
-async function loadConfig() { try { const c = await apiGet('config'); cfgLok = c.lokasi || []; cfgRet = c.retensiFotoHari || 90; renderLok(); $('setRet').value = cfgRet; $('setWa').value = c.waAdmin || ''; $('waTokState').textContent = c.waGatewaySet ? '· aktif ✔' : '· belum diisi'; } catch (e) { $('lokList').innerHTML = `<div class="banner red">${esc(e.message)}</div>`; } }
+$('setSemangat').addEventListener('input', () => { $('semCnt').textContent = $('setSemangat').value.length; });
+$('semSave').addEventListener('click', async () => {
+  const teks = $('setSemangat').value.replace(/\s+/g, ' ').trim().substring(0, 300), b = $('semSave'); b.disabled = true; b.innerHTML = '<span class="spin"></span> Menyimpan…';
+  try {
+    const r = await sendAndConfirm('saveSemangat', { teks }, () => apiGet('semangat'), (c) => c.teks === teks);
+    if (r) { semAt = Date.now(); showSemangat(r); toast(teks ? '✅ Kata semangat tersimpan' : '✅ Kata semangat dikosongkan'); } else toast(NOT_CONFIRMED, true);
+  } catch (e) { toast(e.message, true); }
+  b.disabled = false; b.textContent = 'Simpan Kata Semangat';
+});
+async function loadConfig() { try { const c = await apiGet('config'); cfgLok = c.lokasi || []; cfgRet = c.retensiFotoHari || 90; renderLok(); $('setRet').value = cfgRet; $('setWa').value = c.waAdmin || ''; $('setSemangat').value = c.semangat || ''; $('semCnt').textContent = ($('setSemangat').value || '').length; $('waTokState').textContent = c.waGatewaySet ? '· aktif ✔' : '· belum diisi'; } catch (e) { $('lokList').innerHTML = `<div class="banner red">${esc(e.message)}</div>`; } }
 function renderLok() {
   $('lokList').innerHTML = cfgLok.length ? cfgLok.map((l, i) => `<div class="item" data-i="${i}"><div class="field"><label>Nama titik</label><input data-k="nama" value="${esc(l.nama)}"></div>
     <div class="row"><div class="field grow"><label>Latitude</label><input data-k="lat" inputmode="decimal" value="${esc(l.lat)}"></div><div class="field grow"><label>Longitude</label><input data-k="lng" inputmode="decimal" value="${esc(l.lng)}"></div><div class="field" style="width:90px"><label>Radius (m)</label><input data-k="radius" inputmode="numeric" value="${esc(l.radius)}"></div></div>
@@ -1332,7 +1378,7 @@ function openLupa() {
     const b = $('lpSend'); b.disabled = true; b.innerHTML = '<span class="spin"></span> Mengirim…';
     try {
       await apiGet('lupaPassword', { username: u, hp, token: '' });
-      const wa = pubInfo.waAdmin ? `<a class="btn btn-teal btn-block" style="text-decoration:none;margin-top:10px" target="_blank" rel="noopener" href="${waLink(pubInfo.waAdmin, 'Assalamualaikum admin, saya lupa password akun Absensi RSI. Username: ' + u + ', No. WA: ' + hp + '. Mohon dibantu password sementara, terima kasih.')}">💬 Hubungi admin via WhatsApp</a>` : '';
+      const wa = pubInfo.waAdmin ? `<a class="btn btn-teal btn-block" style="text-decoration:none;margin-top:10px" target="_blank" rel="noopener" href="${waLink(pubInfo.waAdmin, ['Assalamualaikum admin,', '', 'Saya lupa password akun Absensi.', '- Username: ' + u, '- No. WhatsApp: ' + hp, '', 'Mohon dibantu password sementara.', 'Terima kasih.'].join('\n'))}">💬 Hubungi admin via WhatsApp</a>` : '';
       $('genBody').innerHTML = `<h2>📨 Permintaan Diterima</h2>
         <div class="banner blue"><b>Jika username dan no. WhatsApp cocok:</b><br>• Password sementara dikirim ke <b>WhatsApp</b> Anda (biasanya dalam beberapa detik).<br>• Bila belum masuk, admin akan mengirimkannya secepatnya.<br>• Akun yang belum punya no. WhatsApp terdaftar: hubungi admin.</div>
         <div class="small dim" style="text-align:center">Login dengan password sementara, lalu Anda diminta membuat password baru. Password lama tetap berlaku sampai saat itu. Maksimal 3 permintaan per 6 jam.</div>${wa}<div class="foot"><button class="btn" onclick="closeGen()">Tutup</button></div>`;
@@ -1388,7 +1434,7 @@ async function makeTemp(userId, btn) {
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'; }
   try {
     const r = await apiGet('resetBuat', { userId });
-    const txt = `Assalamualaikum ${r.nama}, password sementara akun Absensi RSI Anda: ${r.password} (username: ${r.username}, berlaku ${Math.round(r.berlakuMenit / 60)} jam). Silakan login lalu buat password baru. Jangan dibagikan ke orang lain.`;
+    const txt = ['Assalamualaikum ' + r.nama + ',', '', 'PASSWORD SEMENTARA AKUN ABSENSI', '- Username: ' + r.username, '- Password sementara: ' + r.password, '- Berlaku: ' + Math.round(r.berlakuMenit / 60) + ' jam', '', 'CARA MASUK', '1. Buka aplikasi Absensi, login dengan username dan password sementara di atas.', '2. Buat password baru saat diminta.', '', 'Jangan bagikan password ini ke siapa pun.', '', 'Terima kasih.', 'RSI At-Tin Husada Ngawi'].join('\n');
     openGen(`<h2>🔑 Password Sementara</h2><div class="small dim">${esc(r.nama)} · @${esc(r.username)}</div><div class="pw-big" id="tmpPw">${esc(r.password)}</div>
       <div class="small dim" style="text-align:center">Berlaku ${Math.round(r.berlakuMenit / 60)} jam. Karyawan wajib membuat password baru saat login.</div>
       ${r.hp ? `<a class="btn btn-teal btn-block" style="text-decoration:none;margin-top:12px" target="_blank" rel="noopener" href="${waLink(r.hp, txt)}">💬 Kirim via WhatsApp</a>` : '<div class="banner" style="margin-top:12px">Tidak ada nomor WhatsApp. Sampaikan langsung ke karyawan.</div>'}
@@ -1438,7 +1484,7 @@ function renderJaga() {
   units.sort((a, b) => (b.unit === me.unit) - (a.unit === me.unit));
   const all = units.reduce((a, x) => a.concat(x.orang.map((o) => Object.assign({ unit: x.unit }, o))), []);
   const byS = { P: 0, S: 0, D: 0, M: 0 }; all.forEach((o) => { if (byS[o.shift] !== undefined) byS[o.shift]++; });
-  $('jgSum').innerHTML = `<div><b>${all.length}</b><span>Sedang jaga</span></div><div><b>${byS.P}/${byS.S}</b><span>Pagi / Siang</span></div><div><b>${byS.D}/${byS.M}</b><span>Middle / Malam</span></div>`;
+  $('jgSum').innerHTML = `<div><b>${all.length}</b><span>Sedang jaga</span></div><div><b>${byS.P}<i class="sep">|</i>${byS.S}</b><span>Pagi <i class="sep">|</i> Siang</span></div><div><b>${byS.D}<i class="sep">|</i>${byS.M}</b><span>Middle <i class="sep">|</i> Malam</span></div>`;
   $('jgAt').textContent = 'Terakhir: ' + (jagaData.now || '').substring(11, 19);
   if (view === 'shift') {
     const order = ['P', 'S', 'D', 'M'];
