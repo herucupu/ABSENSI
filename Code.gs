@@ -19,7 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 7;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 8;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -737,6 +737,15 @@ function actSaveProfil_(u, p) {
   CacheService.getScriptCache().remove('U:' + u.id);
   return { ok: true };
 }
+/** Foto profil beberapa karyawan sekaligus (untuk halaman Jaga). Foto profil boleh dilihat semua karyawan yang login. */
+function actFotoBanyak_(u, p) {
+  var ids = String(p.ids || '').split(',').slice(0, 30), map = {};
+  for (var i = 0; i < ids.length; i++) {
+    var id = String(ids[i] || '').trim();
+    if (/^[A-Za-z0-9_-]{6,40}$/.test(id)) map[id] = fotoOf_(id);
+  }
+  return { map: map };
+}
 function actProfilFoto_(u, p) {
   var id = String(p.id || '');
   var t = getUserById_(id);
@@ -1213,6 +1222,7 @@ function doGet(e) {
       case 'rekap': return out_(actRekap_(u, p));
       case 'foto': return out_(actFoto_(u, p));
       case 'profilFoto': return out_(actProfilFoto_(u, p));
+      case 'fotoBanyak': return out_(actFotoBanyak_(u, p));
       case 'changePassword': return out_(actChangePassword_(u, p));
       case 'karyawanList': return out_(actKaryawanList_(u));
       case 'pendingList': return out_(actPendingList_(u));
