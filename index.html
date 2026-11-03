@@ -404,6 +404,26 @@ a.jg-wa svg{width:23px;height:23px;fill:#fff;}
 .ak-name{color:#fff;text-shadow:0 2px 6px rgba(0,10,40,.6);}
 .ak-chip{box-shadow:0 8px 12px -8px rgba(0,0,0,.6),0 1px 0 #fff inset;}
 #jgSum span{white-space:nowrap;letter-spacing:.2px;} #jgSum span .sep{margin:0 .3em;}
+/* ===== v12 ===== */
+.q-ic{width:64px;height:50px;border-radius:14px;background:#fff;box-shadow:0 10px 14px -9px rgba(19,40,90,.55),0 0 0 2px #FFB766;overflow:hidden;padding:3px;}
+.q-ic img{width:100%;height:100%;object-fit:contain;display:block;}
+/* unit Jaga: gradasi hidup, tidak kusam */
+.page .glass.card.jg-unit h3{background:linear-gradient(120deg,#5aa2f2,#2a63c4 85%);box-shadow:0 12px 18px -12px rgba(20,88,176,.7),0 1px 0 rgba(255,255,255,.5) inset;text-shadow:0 1px 2px rgba(0,20,70,.4);}
+.page .glass.card.jg-unit:nth-of-type(4n+2) h3{background:linear-gradient(120deg,#35d3c7,#0f9a93 85%);box-shadow:0 12px 18px -12px rgba(14,163,157,.7),0 1px 0 rgba(255,255,255,.5) inset;}
+.page .glass.card.jg-unit:nth-of-type(4n+3) h3{background:linear-gradient(120deg,#a48df3,#6a49cf 85%);box-shadow:0 12px 18px -12px rgba(109,75,208,.7),0 1px 0 rgba(255,255,255,.5) inset;}
+.page .glass.card.jg-unit:nth-of-type(4n+4) h3{background:linear-gradient(120deg,#ffb36a,#ec741a 85%);box-shadow:0 12px 18px -12px rgba(232,101,10,.7),0 1px 0 rgba(255,255,255,.5) inset;}
+/* ringkasan info: ringkas, datar (bukan tombol) */
+.stat-tiles{grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;} .stat-tiles.tim6{grid-template-columns:repeat(3,1fr);}
+@media(min-width:700px){.stat-tiles.tim6{grid-template-columns:repeat(6,1fr);}}
+.stat-tiles .st{flex-direction:column;align-items:center;justify-content:center;gap:0;padding:7px 3px;text-align:center;border-radius:12px;box-shadow:none;border:1px solid rgba(19,40,90,.08);}
+.stat-tiles .st::after{content:none;}
+.stat-tiles .st i{font-style:normal;font-size:14px;line-height:1.2;}
+.stat-tiles .st b{font-size:15px;line-height:1.2;margin-top:1px;white-space:nowrap;}
+.stat-tiles .st span{font-size:9.5px;letter-spacing:.1px;margin-top:1px;text-transform:none;white-space:nowrap;color:#4a5878;}
+.st.c1{background:#e7f0fd;} .st.c2{background:#dcf7f3;} .st.c3{background:#eee9fc;} .st.c4{background:#ffeeda;} .st.c5{background:#fff4cf;} .st.c6{background:#fce4e4;}
+.shift-box{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;box-shadow:none;border:1px solid rgba(19,40,90,.08);background:rgba(255,255,255,.55);margin-bottom:10px;flex-wrap:wrap;}
+.shift-box::after{content:none;} .shift-ttl{margin:0;font-size:10px;white-space:nowrap;}
+.shift-chips{gap:5px;} .tag.sc{font-size:11px;padding:3px 5px 3px 8px;gap:6px;border-radius:9px;box-shadow:none;} .tag.sc b{padding:0 6px;border-radius:6px;font-size:11px;}
 body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
 </style>
@@ -458,7 +478,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
           <div><b id="hDur">—</b><span>Durasi</span></div>
         </div>
       </div>
-      <div class="glass card quote hidden" id="hQuote"><div class="q-ic">💪</div><div class="grow"><div class="q-ttl">Semangat Hari Ini</div><div class="q-tx" id="hQuoteTx"></div><div class="q-dt" id="hQuoteDt"></div></div></div>
+      <div class="glass card quote hidden" id="hQuote"><div class="q-ic"><img id="qLogo" alt="RSI At-Tin Husada"></div><div class="grow"><div class="q-ttl">Semangat Hari Ini</div><div class="q-tx" id="hQuoteTx"></div><div class="q-dt" id="hQuoteDt"></div></div></div>
       <div id="olderBanner"></div>
       <div class="act-grid" id="absenAction">
         <button class="act-tile act-in" id="btnMasuk"><span class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span><b>Absen Masuk</b><small id="tlMasuk">Klik untuk absen saat datang kerja</small></button>
@@ -618,7 +638,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 /* ============================================================
    KONFIGURASI — isi dengan URL Web App Apps Script Anda
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbyKnbTyXBhmptMl_oDG_wpfcbolAM0zkvgxUH_RuaVOUFTYwdl3HdOa9gz9MgQN0l36/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxfS_v1PtSkofqJG2oLtoPbtjlsYhbsvpPi0anIIQUpB4-vhf5q9xSCHI9uGW-secYz/exec";
 
 /* ---------------- util ---------------- */
 const $ = (id) => document.getElementById(id);
@@ -653,7 +673,7 @@ function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classNam
 /* ---------------- API ---------------- */
 const API_READY = API_URL && API_URL.indexOf('PASTE_URL') < 0;
 let pubInfo = { waAdmin: '' };
-const NEED_VER = 9;
+const NEED_VER = 10;
 async function loadPubInfo() {
   if (!API_READY) return;
   try { pubInfo = await apiGet('infoPublik', { token: '' }); if (!pubInfo.ver || pubInfo.ver < NEED_VER) $('verWarn').classList.remove('hidden'); }
@@ -787,7 +807,7 @@ function buildNav() {
 }
 let semAt = 0;
 function showSemangat(r) {
-  const t = (r && r.teks) || ''; $('hQuote').classList.toggle('hidden', !t); $('hQuoteTx').textContent = t;
+  const t = (r && r.teks) || ''; if (t && !$('qLogo').src.startsWith('data:')) $('qLogo').src = $('lgLogo').src; $('hQuote').classList.toggle('hidden', !t); $('hQuoteTx').textContent = t;
   $('hQuoteDt').textContent = t && r.tgl ? 'Dari admin · ' + fmtDate(r.tgl) : '';
 }
 async function loadSemangat() { if (Date.now() - semAt < 120000) return; try { const r = await apiGet('semangat'); semAt = Date.now(); showSemangat(r); } catch (e) { /* server lama: kartu disembunyikan */ } }
@@ -1116,8 +1136,8 @@ async function loadTim() {
   const cur = $('tmUnit').value; $('tmUnit').innerHTML = '<option value="">Semua unit</option>' + tmData.units.map((u) => `<option>${esc(u)}</option>`).join(''); $('tmUnit').value = cur;
   renderTim();
 }
-function statTiles(items) { return '<div class="stat-tiles">' + items.map((i) => `<div class="st ${i[0]}"><div class="st-ic">${i[1]}</div><div><b>${i[2]}</b><span>${i[3]}</span></div></div>`).join('') + '</div>'; }
-function shiftBox(c) { return '<div class="shift-box"><div class="shift-ttl">Rincian shift</div><div class="shift-chips">' + ['P', 'S', 'D', 'M'].map((k) => `<span class="tag tag-${k} sc ${(c[k] || 0) ? '' : 'zero'}">${SHIFT_NAME[k]} <b>${c[k] || 0}</b></span>`).join('') + '</div></div>'; }
+function statTiles(items, cls) { return '<div class="stat-tiles ' + (cls || '') + '">' + items.map((i) => `<div class="st ${i[0]}"><i>${i[1]}</i><b>${i[2]}</b><span>${i[3]}</span></div>`).join('') + '</div>'; }
+function shiftBox(c) { return '<div class="shift-box"><span class="shift-ttl">Rincian shift</span><div class="shift-chips">' + ['P', 'S', 'D', 'M'].map((k) => `<span class="tag tag-${k} sc ${(c[k] || 0) ? '' : 'zero'}">${SHIFT_NAME[k]} <b>${c[k] || 0}</b></span>`).join('') + '</div></div>'; }
 function renderTim() {
   const unit = $('tmUnit').value, q = $('tmSearch').value.trim().toLowerCase();
   let rows = tmData.summary.filter((s) => (!unit || s.unit === unit) && (!q || s.nama.toLowerCase().includes(q)));
@@ -1125,7 +1145,7 @@ function renderTim() {
   const tot = tmData.summary.filter((s) => !unit || s.unit === unit);
   const hadir = tot.filter((s) => s.hari > 0).length, cek = tot.reduce((a, s) => a + s.cek, 0), bel = tot.reduce((a, s) => a + s.belum, 0);
   const sh = { P: 0, S: 0, D: 0, M: 0 }; let mnt = 0; tot.forEach((x) => { sh.P += x.P; sh.S += x.S; sh.D += (x.D || 0); sh.M += x.M; mnt += x.menit; });
-  $('tmSum').innerHTML = statTiles([['c1', '👥', tot.length, 'Karyawan'], ['c2', '✅', hadir, 'Pernah hadir'], ['c3', '🔁', sh.P + sh.S + sh.D + sh.M, 'Total shift'], ['c4', '⏱️', fmtDur(mnt), 'Total jam'], ['c5', '⚠️', cek, 'Perlu dicek'], ['c6', '⏳', bel, 'Belum pulang']]) + shiftBox(sh);
+  $('tmSum').innerHTML = statTiles([['c1', '👥', tot.length, 'Karyawan'], ['c2', '✅', hadir, 'Pernah hadir'], ['c3', '🔁', sh.P + sh.S + sh.D + sh.M, 'Total shift'], ['c4', '⏱️', fmtDur(mnt), 'Total jam'], ['c5', '⚠️', cek, 'Perlu dicek'], ['c6', '⏳', bel, 'Belum pulang']], 'tim6') + shiftBox(sh);
   const tb = $('tmTable').querySelector('tbody');
   tb.innerHTML = rows.length ? rows.map((s) => `<tr class="click" data-u="${esc(s.userId)}"><td><b>${esc(s.nama)}</b><div class="small dim">${esc(s.unit || '')}</div><div>${['P', 'S', 'D', 'M'].filter((k) => (s[k] || 0) > 0).map((k) => `<span class="tag tag-${k} mini">${SHIFT_NAME[k]} ${s[k]}</span>`).join('')}</div></td><td class="n">${s.hari}</td><td class="n mono">${fmtDur(s.menit)}</td><td class="n"><b>${s.P + s.S + (s.D || 0) + s.M}</b></td><td class="n">${s.cek ? '<span class="flag">' + s.cek + '</span>' : ''}${s.belum ? '<span class="flag bad">' + s.belum + '</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Tidak ada data.</td></tr>';
   tb.querySelectorAll('tr.click').forEach((tr) => tr.addEventListener('click', () => openEmployee(tr.dataset.u)));
@@ -1140,7 +1160,7 @@ function openEmployee(uid_) {
     <div class="sum-grid"><div><b>${s.hari}</b><span>Hari</span></div><div><b>${fmtDur(s.menit)}</b><span>Jam</span></div><div><b>${s.cek}</b><span>Cek</span></div></div>
     <div id="empList">${rows.length ? rows.map((r) => {
       const lap = lapForUser(tmData.laporan, r.userId, r.tanggal, r.shift);
-      return recItem(r).replace(/<div class="row wrap" style="margin-top:8px;gap:6px">/, (lap ? `<div class="lap-text">${esc(lap)}</div>` : '') + '<div class="row wrap" style="margin-top:8px;gap:6px"><button class="btn btn-sm btn-primary" data-kor="1">✎ Koreksi / Cek</button>');
+      return recItem(r).replace(/<div class="row wrap" style="margin-top:8px;gap:6px">/, (lap ? `<div class="lap-text">${esc(lap)}</div>` : '') + '<div class="row wrap" style="margin-top:8px;gap:6px">' + ((me.role === 'admin' || s.unit === me.unit) ? '<button class="btn btn-sm btn-primary" data-kor="1">✎ Koreksi / Cek</button>' : ''));
     }).join('') : '<div class="empty">Belum ada absen.</div>'}</div>
     <div class="foot"><button class="btn" onclick="closeGen()">Tutup</button></div>`);
   setAvatar($('emAv'), '', s.nama); apiGet('profilFoto', { id: uid_ }).then((x) => setAvatar($('emAv'), x.foto, s.nama)).catch(() => {});
@@ -1212,7 +1232,7 @@ function openKaryawan(r) {
     <div class="row"><div class="field grow"><label>NIP</label><input id="kyNip" value="${esc(r.nip)}"></div><div class="field grow"><label>Unit</label><input id="kyUnit" value="${esc(r.unit)}" list="unitList"></div></div>
     <datalist id="unitList">${[...new Set([...((S && S.units) || []), ...kyRows.map((x) => x.unit)].filter(Boolean))].map((u) => `<option value="${esc(u)}">`).join('')}</datalist>
     <div class="row"><div class="field grow"><label>Username</label><input id="kyUser" value="${esc(r.username)}" autocapitalize="none"></div>
-    <div class="field grow"><label>Peran</label><select id="kyRole">${[['karyawan', 'Karyawan'], ['atasan', 'Atasan (lihat unit)'], ['admin', 'Admin']].map((o) => `<option value="${o[0]}" ${r.role === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div></div>
+    <div class="field grow"><label>Peran</label><select id="kyRole">${[['karyawan', 'Karyawan'], ['atasan', 'Atasan (lihat semua karyawan)'], ['admin', 'Admin']].map((o) => `<option value="${o[0]}" ${r.role === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div></div>
     <div class="row"><div class="field grow"><label>Email</label><input id="kyEmail" type="email" value="${esc(r.email || '')}" placeholder="opsional"></div><div class="field grow"><label>WhatsApp</label><input id="kyHp" inputmode="tel" value="${esc(r.hp || '')}" placeholder="opsional"></div></div>
     <div class="field"><label>${n ? 'Password awal (default = NIP)' : 'Reset password (kosongkan jika tidak diubah)'}</label><input id="kyPw" placeholder="${n ? 'mis. NIP' : 'password baru'}"></div>
     ${n ? '' : `<label class="row small" style="margin-bottom:6px"><input type="checkbox" id="kyAktif" ${r.aktif === 'Y' ? 'checked' : ''}> Akun aktif</label>`}

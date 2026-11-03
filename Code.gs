@@ -19,7 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 9;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 10;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -381,6 +381,8 @@ function auth_(token) {
   return u;
 }
 function isManager_(u) { return u.role === 'admin' || u.role === 'atasan'; }
+/** Atasan boleh MELIHAT semua karyawan; mengoreksi tetap dibatasi unitnya (canSee_). */
+function canView_(viewer) { return isManager_(viewer); }
 function canSee_(viewer, unit) { return viewer.role === 'admin' || (viewer.role === 'atasan' && viewer.unit === unit); }
 
 function tempOk_(u, pw) {
@@ -749,7 +751,7 @@ function actProfilFoto_(u, p) {
   var id = String(p.id || '');
   var t = getUserById_(id);
   if (!t) throw fail_('Pengguna tidak ditemukan.');
-  if (t.id !== u.id && !(isManager_(u) && canSee_(u, t.unit))) throw fail_('Tidak punya akses.');
+  if (t.id !== u.id && !canView_(u)) throw fail_('Tidak punya akses.');
   return { foto: fotoOf_(id) };
 }
 
@@ -1054,13 +1056,13 @@ function actRekap_(u, p) {
   if (!isManager_(u)) throw fail_('Tidak punya akses.');
   var key = validKey_(p.period) ? p.period : periodKey_(nowJ_().substring(0, 10));
   var users = readAll_(karSheet_()).filter(function (x) {
-    return x.aktif === 'Y' && canSee_(u, x.unit);
+    return x.aktif === 'Y' && canView_(u);
   });
   var sh = absenSheet_(key, false);
   var rows = [];
   if (sh) {
     var all = readAll_(sh);
-    for (var i = 0; i < all.length; i++) if (canSee_(u, all[i].unit)) rows.push(pubRecord_(all[i]));
+    for (var i = 0; i < all.length; i++) if (canView_(u)) rows.push(pubRecord_(all[i]));
   }
   rows.sort(function (a, b) { return a.tanggal < b.tanggal ? 1 : a.tanggal > b.tanggal ? -1 : 0; });
   var lap = laporanMap_(key, null);
@@ -1111,7 +1113,7 @@ function actFoto_(u, p) {
   var f = findRowById_(sh, ABSEN_HDR, String(p.id || ''));
   if (!f) throw fail_('Data tidak ditemukan.');
   var o = f.o;
-  if (o.userId !== u.id && !(isManager_(u) && canSee_(u, o.unit))) throw fail_('Tidak punya akses.');
+  if (o.userId !== u.id && !canView_(u)) throw fail_('Tidak punya akses.');
   var fid = p.which === 'pulang' ? o.fotoPulang : o.fotoMasuk;
   if (!fid) throw fail_('Foto tidak ada.');
   if (fid === 'dihapus') throw fail_('Foto sudah dihapus otomatis (lewat masa simpan).');
