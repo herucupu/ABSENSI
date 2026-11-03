@@ -19,7 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 6;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 7;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -601,10 +601,20 @@ function actSignup_(p) {
 }
 
 /* ---------- lupa password ---------- */
+function waToken_() { return PropertiesService.getScriptProperties().getProperty('WA_GATEWAY_TOKEN') || ''; }
+/** Kirim WhatsApp lewat gateway (Fonnte). Mengembalikan true bila gateway menjawab status sukses. */
+function sendWa_(hp, text) {
+  try {
+    var res = UrlFetchApp.fetch('https://api.fonnte.com/send', { method: 'post', headers: { Authorization: waToken_() }, payload: { target: hp, message: text, countryCode: '62' }, muteHttpExceptions: true });
+    var j = JSON.parse(res.getContentText() || '{}');
+    return j.status === true || j.status === 'true';
+  } catch (e) { return false; }
+}
 function actLupa_(p) {
   var username = String(p.username || '').trim().toLowerCase();
   var nip = String(p.nip || '').trim().toLowerCase();
-  if (!username || !nip) throw fail_('Isi username dan NIP.');
+  var hpIn = normWa_(p.hp || '');
+  if (!username || (!hpIn && !nip)) throw fail_('Isi username dan no. WhatsApp.');
   var cache = CacheService.getScriptCache();
   var rk = 'RS:' + username;
   var n = +(cache.get(rk) || 0);
@@ -614,10 +624,21 @@ function actLupa_(p) {
   var rows = readAll_(sh), u = null;
   for (var i = 0; i < rows.length; i++) if (rows[i].username === username) { u = rows[i]; break; }
   // jawaban selalu sama agar tidak membocorkan akun mana yang ada
-  if (!u || u.aktif !== 'Y' || !u.nip || u.nip.toLowerCase() !== nip) return { ok: true };
+  // verifikasi: no. WhatsApp yang terdaftar di akun; bila akun belum punya no. WA, memakai NIP (cadangan)
+  var cocok = u && u.aktif === 'Y' && (u.hp ? (hpIn && u.hp === hpIn) : (nip && u.nip && u.nip.toLowerCase() === nip));
+  if (!cocok) return { ok: true };
   var tmp = randomTempPw_();
   var f = findRowById_(sh, KARYAWAN_HDR, u.id);
-  var viaEmail = false;
+  var viaEmail = false, viaWa = false;
+  // Bila gateway WhatsApp aktif (token diisi admin), password sementara langsung dikirim ke WhatsApp karyawan.
+  if (u.hp && waToken_()) {
+    f.o.tempHash = hash_(u.salt, tmp); f.o.tempExp = plusMinutesTs_(TEMP_PW_MENIT_EMAIL);
+    writeRow_(sh, KARYAWAN_HDR, f.row, f.o); cache.remove('U:' + u.id);
+    viaWa = sendWa_(u.hp, 'Absensi RSI At-Tin Husada\n\nHalo ' + u.nama + ', permintaan reset password diterima.\nUsername: ' + u.username + '\nPassword sementara: ' + tmp +
+      '\nBerlaku ' + TEMP_PW_MENIT_EMAIL + ' menit. Login memakai password ini lalu buat password baru.\nPassword lama tetap berlaku. Jika bukan Anda yang meminta, abaikan pesan ini.');
+    if (!viaWa) { f.o.tempHash = ''; f.o.tempExp = ''; writeRow_(sh, KARYAWAN_HDR, f.row, f.o); cache.remove('U:' + u.id); }
+  }
+  if (viaWa) return { ok: true };
   // WhatsApp diprioritaskan: bila ada no. WA, permintaan masuk antrean admin yang mengirim password sementara via WA.
   // Email hanya dipakai bila karyawan tidak punya no. WA.
   if (u.email && !u.hp) {
@@ -756,6 +777,10 @@ function actSaveConfig_(u, p) {
   var r = parseInt(p.retensiFotoHari, 10);
   if (r >= 7 && r <= 3650) setConfigKey_('retensiFotoHari', r);
   if (p.waAdmin !== undefined) setConfigKey_('waAdmin', normWa_(p.waAdmin));
+  if (typeof p.waGatewayToken === 'string' && p.waGatewayToken.trim()) {
+    if (p.waGatewayToken.trim() === '-') PropertiesService.getScriptProperties().deleteProperty('WA_GATEWAY_TOKEN');
+    else PropertiesService.getScriptProperties().setProperty('WA_GATEWAY_TOKEN', p.waGatewayToken.trim());
+  }
   return { ok: true };
 }
 
@@ -1195,7 +1220,7 @@ function doGet(e) {
       case 'resetBuat':
         var lk = LockService.getScriptLock(); lk.waitLock(20000);
         try { return out_(actResetBuat_(u, p)); } finally { try { lk.releaseLock(); } catch (e3) { /* tidak terkunci */ } }
-      case 'config': return out_(getConfig_());
+      case 'config': { var cfgOut = getConfig_(); cfgOut.waGatewaySet = !!waToken_(); return out_(cfgOut); }
       case 'jaga': return out_(actJaga_(u));
       default: return out_({ error: 'Aksi tidak dikenal: ' + a });
     }
