@@ -19,7 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 11;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 12;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -974,10 +974,13 @@ function laporanMap_(key, userId) {
   var sh = laporSheet_(key, false);
   var m = {};
   if (!sh) return m;
+  var ck = userId ? 'LP:' + key + ':' + userId : '';
+  if (ck) { var hit = cGet_(ck); if (hit) return hit; }
   var rows = readAll_(sh);
   for (var i = 0; i < rows.length; i++) {
     if (!userId || rows[i].userId === userId) m[rows[i].userId + '_' + rows[i].tanggal + '_' + (rows[i].shift || '')] = rows[i].isi;
   }
+  if (ck) cPut_(ck, m, CACHE_USER_SEC);
   return m;
 }
 
@@ -1041,6 +1044,8 @@ function summarize_(rows, users) {
 
 function actRiwayat_(u, p) {
   var key = validKey_(p.period) ? p.period : periodKey_(nowJ_().substring(0, 10));
+  var rwk = 'RW:' + key + ':' + u.id, rwHit = cGet_(rwk);
+  if (rwHit) return rwHit;
   var sh = absenSheet_(key, false);
   var rows = [];
   if (sh) {
@@ -1049,7 +1054,9 @@ function actRiwayat_(u, p) {
   }
   rows.sort(function (a, b) { return a.tanggal < b.tanggal ? 1 : a.tanggal > b.tanggal ? -1 : (a.jamMasuk < b.jamMasuk ? 1 : -1); });
   var lap = laporanMap_(key, u.id);
-  return { period: periodRange_(key), rows: rows, laporan: lap, summary: summarize_(rows, null)[0] || null };
+  var rwOut = { period: periodRange_(key), rows: rows, laporan: lap, summary: summarize_(rows, null)[0] || null };
+  cPut_(rwk, rwOut, CACHE_RIWAYAT_SEC);
+  return rwOut;
 }
 
 function actRekap_(u, p) {
@@ -1102,6 +1109,7 @@ function actKoreksi_(u, p) {
   o.flag = addFlag_(o.flag, 'KOREKSI');
   o.flag = addFlag_(o.flag, 'DICEK');
   writeRow_(sh, ABSEN_HDR, f.row, o);
+  dropUserCache_(o.userId, [periodKey_(tgl)]);
   return { ok: true };
 }
 
@@ -1213,6 +1221,59 @@ function hapusFotoLama() {
 }
 
 /* ====================== ROUTER ====================== */
+/* ====================== CACHE PER PENGGUNA ====================== */
+var CACHE_USER_SEC = 300;       // laporan per pengguna
+var CACHE_RIWAYAT_SEC = 120;    // riwayat per pengguna
+function cGet_(k) { try { var v = CacheService.getScriptCache().get(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function cPut_(k, obj, sec) { try { var s = JSON.stringify(obj); if (s.length < 90000) CacheService.getScriptCache().put(k, s, sec); } catch (e) { /* cache hanya percepatan */ } }
+/** Buang cache riwayat & laporan satu pengguna (periode berjalan, sebelumnya, dan periode tambahan). */
+function dropUserCache_(userId, extraKeys) {
+  try {
+    var k = periodKey_(nowJ_().substring(0, 10)), ks = [k, prevKey_(k)].concat(extraKeys || []);
+    var c = CacheService.getScriptCache();
+    for (var i = 0; i < ks.length; i++) { c.remove('RW:' + ks[i] + ':' + userId); c.remove('LP:' + ks[i] + ':' + userId); }
+  } catch (e) { /* abaikan */ }
+}
+
+/* ====================== ARSIP BULAN LAMA ======================
+ * Satu spreadsheet maksimal 10 juta sel. Tab bulan lama dapat dipindah ke file arsip per tahun
+ * ("Arsip Absensi RSI - <tahun>", dibuat otomatis di Drive Anda).
+ * Jalankan manual dari editor Apps Script:
+ *   1) arsipkanBulanLama()            -> hanya MENYALIN (aman, tidak menghapus apa pun)
+ *   2) buka file arsip, periksa isinya
+ *   3) arsipkanDanHapusBulanLama()    -> menyalin lagi bila perlu, memastikan jumlah baris sama, baru menghapus tab asli
+ */
+var ARSIP_BULAN_TAHAN = 14;     // tab yang lebih tua dari 14 periode dipindah
+function arsipBulanLama_(hapus) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), props = PropertiesService.getScriptProperties();
+  var cut = periodKey_(nowJ_().substring(0, 10));
+  for (var i = 0; i < ARSIP_BULAN_TAHAN; i++) cut = prevKey_(cut);
+  var all = ss.getSheets(), todo = [];
+  for (var s = 0; s < all.length; s++) {
+    var m = /^(Absensi|Laporan)_(\d{4}-\d{2})$/.exec(all[s].getName());
+    if (m && m[2] < cut) todo.push({ sh: all[s], name: all[s].getName(), year: m[2].substring(0, 4) });
+  }
+  var res = { batas: cut, ditemukan: todo.length, disalin: 0, dihapus: 0, dilewati: 0 }, dest = {};
+  for (var t = 0; t < todo.length; t++) {
+    var it = todo[t], d = dest[it.year];
+    if (!d) {
+      var id = props.getProperty('ARSIP_' + it.year);
+      if (id) { try { d = SpreadsheetApp.openById(id); } catch (e) { d = null; } }
+      if (!d) { d = SpreadsheetApp.create('Arsip Absensi RSI - ' + it.year); props.setProperty('ARSIP_' + it.year, d.getId()); Logger.log('Dibuat file arsip ' + it.year + ': ' + d.getUrl()); }
+      dest[it.year] = d;
+    }
+    var copy = d.getSheetByName(it.name);
+    if (!copy) { copy = it.sh.copyTo(d); copy.setName(it.name); res.disalin++; Logger.log('Disalin: ' + it.name); }
+    var same = copy.getLastRow() === it.sh.getLastRow() && copy.getLastColumn() === it.sh.getLastColumn();
+    if (!same) { res.dilewati++; Logger.log('PERIKSA: jumlah baris/kolom ' + it.name + ' berbeda di arsip; tab asli tidak dihapus.'); continue; }
+    if (hapus) { ss.deleteSheet(it.sh); res.dihapus++; Logger.log('Dihapus dari file utama: ' + it.name); }
+  }
+  Logger.log('Arsip selesai: ' + JSON.stringify(res));
+  return res;
+}
+function arsipkanBulanLama() { return arsipBulanLama_(false); }
+function arsipkanDanHapusBulanLama() { return arsipBulanLama_(true); }
+
 function doGet(e) {
   try {
     var p = e.parameter || {};
@@ -1280,6 +1341,7 @@ function doPost(e) {
       case 'unitHapus': r = actUnitHapus_(u, p); break;
       default: r = { error: 'Aksi tidak dikenal: ' + p.action };
     }
+    if (r && !r.error) dropUserCache_(u.id);   // data pengguna ini berubah: cache riwayat/laporannya dibuang
     return out_(r);
   } catch (err) {
     return out_({ error: String(err && err.message ? err.message : err) });
