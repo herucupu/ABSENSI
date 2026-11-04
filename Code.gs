@@ -19,7 +19,7 @@ var FOTO_HDR = ['userId', 'foto', 'updatedAt'];
 var SH_RESET = 'ResetReq';
 var RESET_HDR = ['id', 'userId', 'username', 'nama', 'unit', 'createdAt', 'status'];
 var MAX_FOTO_PROFIL = 45000;     // karakter base64 (foto profil 160px ~ 8-12 KB)
-var API_VERSION = 10;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
+var API_VERSION = 11;             // dinaikkan tiap ada aksi baru; dipakai aplikasi untuk mendeteksi backend lama
 var TEMP_PW_MENIT_EMAIL = 60;
 var TEMP_PW_MENIT_ADMIN = 24 * 60;
 var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk', 'jamPulang', 'tglPulang',
@@ -27,8 +27,8 @@ var ABSEN_HDR = ['id', 'tanggal', 'userId', 'nama', 'unit', 'shift', 'jamMasuk',
   'flag', 'serverMasuk', 'serverPulang', 'catatan', 'pulangId'];
 var LAPOR_HDR = ['id', 'tanggal', 'userId', 'nama', 'isi', 'updatedAt', 'shift'];   // laporan per tanggal + shift (shift kosong = laporan lama)
 var LAPOR_HARI = 7;              // laporan boleh diisi/diubah sampai 7 hari ke belakang
-var SHIFTS = ['P', 'S', 'D', 'M', 'L'];   // P=Pagi, S=Siang, D=Middle, M=Malam, L=Libur (lama, hanya koreksi)
-var SHIFTS_PICK = ['P', 'S', 'D', 'M'];
+var SHIFTS = ['P', 'S', 'D', 'M', 'R', 'L'];   // P=Pagi, S=Siang, D=Middle, M=Malam, R=Remote, L=Libur (lama, hanya koreksi)
+var SHIFTS_PICK = ['P', 'S', 'D', 'M', 'R'];
 var SH_UNIT = 'Unit';
 var UNIT_HDR = ['nama'];
 var FLAG_CEK = ['LOKASI_JAUH', 'GPS_GAGAL', 'JAM_BEDA', 'JADWAL_L'];
@@ -878,7 +878,7 @@ function actMasuk_(u, p) {
   var id = String(p.id || '');
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw fail_('ID absen tidak valid.');
   var shift = String(p.shift || '').toUpperCase();
-  if (SHIFTS_PICK.indexOf(shift) < 0) throw fail_('Pilih shift (Pagi, Siang, Middle atau Malam).');
+  if (SHIFTS_PICK.indexOf(shift) < 0) throw fail_('Pilih shift (Pagi, Siang, Middle, Malam atau Remote).');
   if (!validJam_(p.jam)) throw fail_('Jam masuk tidak valid.');
   var now = nowJ_(), today = now.substring(0, 10), key = periodKey_(today);
   var sh = absenSheet_(key, true);
@@ -1013,7 +1013,7 @@ function summarize_(rows, users) {
   var map = {}, order = [];
   function ensure(r) {
     if (!map[r.userId]) {
-      map[r.userId] = { userId: r.userId, nama: r.nama, unit: r.unit, hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, L: 0, cek: 0, belum: 0 };
+      map[r.userId] = { userId: r.userId, nama: r.nama, unit: r.unit, hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, R: 0, L: 0, cek: 0, belum: 0 };
       order.push(r.userId);
     }
     return map[r.userId];

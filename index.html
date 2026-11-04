@@ -157,7 +157,7 @@ td{padding:9px 6px;border-top:1px solid var(--line);} td.n,th.n{text-align:cente
 @media (min-width:700px){.overlay{align-items:center;padding:20px;} .sheet{border-radius:26px;}}
 .sheet h2{font-size:18px;margin-bottom:12px;} .sheet .foot{display:flex;gap:10px;margin-top:14px;}
 #ovAbsen .sheet .foot{position:sticky;bottom:calc(-18px - var(--safe-b));padding:12px 0 2px;margin-bottom:-6px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.95) 35%);} .sheet .foot .btn{flex:1;}
-.shift-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.shift-pick{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;} .shift-pick button{grid-column:span 2;} .shift-pick button:nth-child(n+4){grid-column:span 3;}
 .shift-pick button{padding:12px 4px;border-radius:15px;border:2px solid transparent;background:rgba(255,255,255,.75);font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .shift-pick button small{font-size:10.5px;font-weight:500;color:var(--dim);} .shift-pick .e{font-size:20px;}
 .shift-pick button.sel{border-color:var(--blue);background:#fff;box-shadow:0 8px 16px -8px rgba(20,88,176,.6);}
@@ -424,6 +424,15 @@ a.jg-wa svg{width:23px;height:23px;fill:#fff;}
 .shift-box{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;box-shadow:none;border:1px solid rgba(19,40,90,.08);background:rgba(255,255,255,.55);margin-bottom:10px;flex-wrap:wrap;}
 .shift-box::after{content:none;} .shift-ttl{margin:0;font-size:10px;white-space:nowrap;}
 .shift-chips{gap:5px;} .tag.sc{font-size:11px;padding:3px 5px 3px 8px;gap:6px;border-radius:9px;box-shadow:none;} .tag.sc b{padding:0 6px;border-radius:6px;font-size:11px;}
+/* ===== v13 ===== */
+.tag-R{background:linear-gradient(135deg,#c2306f,#e8609b);}
+.tag.sc.tag-R,.tag.mini.tag-R{background:linear-gradient(135deg,#a82060,#d9468a);}
+.shift-pick button[data-s="R"] .e{filter:none;}
+/* tombol Pulang saat belum bisa: tetap oranye, lebih lembut */
+.act-grid .act-out:disabled{opacity:1;filter:none;background:linear-gradient(150deg,#ffcf9f 0%,#ffe6cc 42%,rgba(255,255,255,.92) 100%) !important;box-shadow:0 20px 30px -22px rgba(224,110,10,.45),0 1px 0 #fff inset !important;}
+.act-grid .act-out:disabled .act-ic{background:linear-gradient(145deg,#ffc489,#f2a363);box-shadow:0 10px 14px -10px rgba(224,110,10,.5),0 1px 0 rgba(255,255,255,.5) inset;}
+.act-grid .act-out:disabled b{color:#9a5a1e;} .act-grid .act-out:disabled small{color:#a8733f;}
+#jgSum{grid-template-columns:repeat(4,1fr);gap:6px;} #jgSum>div{padding:10px 2px;} #jgSum span{font-size:9.5px;letter-spacing:0;} #jgSum span .sep{margin:0 .2em;} #jgSum b{font-size:19px;}
 body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
 </style>
@@ -495,7 +504,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
       <div class="small dim" style="margin-bottom:10px">Daftar petugas yang sudah absen masuk dan belum pulang, per unit. Diperbarui otomatis tiap 30 detik. <span id="jgAt"></span></div>
       <div class="jg-filter">
         <label class="jgf"><span>🏥 Unit</span><select id="jgUnit"></select></label>
-        <label class="jgf"><span>🕒 Shift</span><select id="jgShift"><option value="">Semua shift</option><option value="P">🌅 Pagi</option><option value="S">☀️ Siang</option><option value="D">🌤️ Middle</option><option value="M">🌙 Malam</option></select></label>
+        <label class="jgf"><span>🕒 Shift</span><select id="jgShift"><option value="">Semua shift</option><option value="P">🌅 Pagi</option><option value="S">☀️ Siang</option><option value="D">🌤️ Middle</option><option value="M">🌙 Malam</option><option value="R">🏠 Remote</option></select></label>
       </div>
       <div class="sum-grid" id="jgSum"></div>
       <div id="jgList"></div>
@@ -619,7 +628,7 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
   <div class="field" id="abShiftWrap"><label>Shift hari ini</label>
     <div class="shift-pick" id="abShift">
       <button data-s="P"><span class="e">🌅</span>Pagi<small>P</small></button><button data-s="S"><span class="e">☀️</span>Siang<small>S</small></button>
-      <button data-s="D"><span class="e">🌤️</span>Middle<small>D</small></button><button data-s="M"><span class="e">🌙</span>Malam<small>M</small></button>
+      <button data-s="D"><span class="e">🌤️</span>Middle<small>D</small></button><button data-s="M"><span class="e">🌙</span>Malam<small>M</small></button><button data-s="R"><span class="e">🏠</span>Remote<small>R</small></button>
     </div></div>
   <div class="field"><label id="abJamLbl">Jam masuk</label><input type="time" id="abJam"></div>
   <div class="field"><label>Foto (selfie)</label>
@@ -638,14 +647,16 @@ body:not(.authed) #app{display:none;} body.authed #loginScreen{display:none;}
 /* ============================================================
    KONFIGURASI — isi dengan URL Web App Apps Script Anda
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbxfS_v1PtSkofqJG2oLtoPbtjlsYhbsvpPi0anIIQUpB4-vhf5q9xSCHI9uGW-secYz/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzbUSdQVsIUCLRYq-Z6TakvIzGcvQUMQEl0WXKss1Cpx6XBH7oElB0LsAkNiXuG72AH/exec";
 
 /* ---------------- util ---------------- */
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-const SHIFT_NAME = { P: 'Pagi', S: 'Siang', D: 'Middle', M: 'Malam', L: 'Libur' };
+const SHIFT_NAME = { P: 'Pagi', S: 'Siang', D: 'Middle', M: 'Malam', R: 'Remote', L: 'Libur' };
+const SH_ALL = ['P', 'S', 'D', 'M', 'R'];
+const shTot = (s) => SH_ALL.reduce((a, k) => a + ((s && s[k]) || 0), 0);
 const NEED_VER_UI = 4;
 const FLAG_LABEL = { LOKASI_JAUH: 'Lokasi jauh', GPS_GAGAL: 'GPS gagal', JAM_BEDA: 'Jam beda dgn server', JADWAL_L: 'Absen di hari libur', LUPA_PULANG: 'Lupa pulang', KOREKSI: 'Dikoreksi', DICEK: 'Sudah dicek' };
 const FLAG_CEK = ['LOKASI_JAUH', 'GPS_GAGAL', 'JAM_BEDA', 'JADWAL_L'];
@@ -673,7 +684,7 @@ function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classNam
 /* ---------------- API ---------------- */
 const API_READY = API_URL && API_URL.indexOf('PASTE_URL') < 0;
 let pubInfo = { waAdmin: '' };
-const NEED_VER = 10;
+const NEED_VER = 11;
 async function loadPubInfo() {
   if (!API_READY) return;
   try { pubInfo = await apiGet('infoPublik', { token: '' }); if (!pubInfo.ver || pubInfo.ver < NEED_VER) $('verWarn').classList.remove('hidden'); }
@@ -947,7 +958,7 @@ function openAbsen(mode) {
   $('abJamLbl').textContent = mode === 'masuk' ? 'Jam masuk (bisa diubah)' : 'Jam pulang (bisa diubah)';
   $('abShiftWrap').classList.toggle('hidden', mode !== 'masuk');
   const n = nowJ(); $('abJam').value = n.hhmm;
-  let last = localStorage.getItem('absensi_last_shift') || 'P'; if (['P', 'S', 'D', 'M'].indexOf(last) < 0) last = 'P';
+  let last = localStorage.getItem('absensi_last_shift') || 'P'; if (SH_ALL.indexOf(last) < 0) last = 'P';
   document.querySelectorAll('#abShift button').forEach((b) => b.classList.toggle('sel', b.dataset.s === last));
   $('abPhotoBox').innerHTML = '<div class="ph">📷<br><b>Ketuk untuk ambil foto</b></div>';
   $('abSend').disabled = true; $('abSend').textContent = 'Kirim';
@@ -1054,8 +1065,8 @@ function lapShiftOptions(d) {
   lapRows.forEach((r) => { if (r.tanggal === d && r.shift !== 'L') set.add(r.shift); });
   if (S) { [S.open, S.olderOpen].concat(S.todayRecords).forEach((r) => { if (r && r.tanggal === d && r.shift !== 'L') set.add(r.shift); }); }
   Object.keys(lapMap).forEach((k) => { if (k.startsWith(d + '_') && k.length > 11) set.add(k.slice(11)); });
-  let list = ['P', 'S', 'D', 'M'].filter((x) => set.has(x));
-  return list.length ? list : ['P', 'S', 'D', 'M'];
+  let list = SH_ALL.filter((x) => set.has(x));
+  return list.length ? list : SH_ALL.slice();
 }
 function fillShiftSel(wanted) {
   const d = $('lpDate').value, list = lapShiftOptions(d);
@@ -1115,8 +1126,8 @@ async function loadRiwayat() {
   if (!rwKey) rwKey = periodKeyOf(S ? S.today : nowJ().date);
   $('rwLabel').textContent = periodLabel(rwKey); $('rwList').innerHTML = '<div class="empty"><span class="spin dk"></span></div>';
   try {
-    const r = await apiGet('riwayat', { period: rwKey }); const s = r.summary || { hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, cek: 0, belum: 0 };
-    $('rwSum').innerHTML = statTiles([['c1', '✅', s.hari, 'Hari hadir'], ['c2', '⏱️', fmtDur(s.menit), 'Total jam'], ['c3', '🔁', (s.P + s.S + (s.D || 0) + s.M), 'Total shift'], ['c4', '⏳', s.belum, 'Belum pulang']]) + shiftBox(s);
+    const r = await apiGet('riwayat', { period: rwKey }); const s = r.summary || { hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, R: 0, cek: 0, belum: 0 };
+    $('rwSum').innerHTML = statTiles([['c1', '✅', s.hari, 'Hari hadir'], ['c2', '⏱️', fmtDur(s.menit), 'Total jam'], ['c3', '🔁', shTot(s), 'Total shift'], ['c4', '⏳', s.belum, 'Belum pulang']]) + shiftBox(s);
     $('rwList').innerHTML = r.rows.length ? r.rows.map((x) => recItem(x) + '').map((h, i) => {
       const lap = lapForUser(r.laporan, me.id, r.rows[i].tanggal, r.rows[i].shift);
       return lap ? h.replace(/<\/div><\/div>$/, `</div>${'<div class="lap-text">' + esc(lap) + '</div>'}</div>`) : h;
@@ -1137,17 +1148,17 @@ async function loadTim() {
   renderTim();
 }
 function statTiles(items, cls) { return '<div class="stat-tiles ' + (cls || '') + '">' + items.map((i) => `<div class="st ${i[0]}"><i>${i[1]}</i><b>${i[2]}</b><span>${i[3]}</span></div>`).join('') + '</div>'; }
-function shiftBox(c) { return '<div class="shift-box"><span class="shift-ttl">Rincian shift</span><div class="shift-chips">' + ['P', 'S', 'D', 'M'].map((k) => `<span class="tag tag-${k} sc ${(c[k] || 0) ? '' : 'zero'}">${SHIFT_NAME[k]} <b>${c[k] || 0}</b></span>`).join('') + '</div></div>'; }
+function shiftBox(c) { return '<div class="shift-box"><span class="shift-ttl">Rincian shift</span><div class="shift-chips">' + SH_ALL.map((k) => `<span class="tag tag-${k} sc ${(c[k] || 0) ? '' : 'zero'}">${SHIFT_NAME[k]} <b>${c[k] || 0}</b></span>`).join('') + '</div></div>'; }
 function renderTim() {
   const unit = $('tmUnit').value, q = $('tmSearch').value.trim().toLowerCase();
   let rows = tmData.summary.filter((s) => (!unit || s.unit === unit) && (!q || s.nama.toLowerCase().includes(q)));
   if (tmFilter === 'cek') rows = rows.filter((s) => s.cek > 0); else if (tmFilter === 'belum') rows = rows.filter((s) => s.belum > 0);
   const tot = tmData.summary.filter((s) => !unit || s.unit === unit);
   const hadir = tot.filter((s) => s.hari > 0).length, cek = tot.reduce((a, s) => a + s.cek, 0), bel = tot.reduce((a, s) => a + s.belum, 0);
-  const sh = { P: 0, S: 0, D: 0, M: 0 }; let mnt = 0; tot.forEach((x) => { sh.P += x.P; sh.S += x.S; sh.D += (x.D || 0); sh.M += x.M; mnt += x.menit; });
-  $('tmSum').innerHTML = statTiles([['c1', '👥', tot.length, 'Karyawan'], ['c2', '✅', hadir, 'Pernah hadir'], ['c3', '🔁', sh.P + sh.S + sh.D + sh.M, 'Total shift'], ['c4', '⏱️', fmtDur(mnt), 'Total jam'], ['c5', '⚠️', cek, 'Perlu dicek'], ['c6', '⏳', bel, 'Belum pulang']], 'tim6') + shiftBox(sh);
+  const sh = { P: 0, S: 0, D: 0, M: 0, R: 0 }; let mnt = 0; tot.forEach((x) => { SH_ALL.forEach((k) => { sh[k] += (x[k] || 0); }); mnt += x.menit; });
+  $('tmSum').innerHTML = statTiles([['c1', '👥', tot.length, 'Karyawan'], ['c2', '✅', hadir, 'Pernah hadir'], ['c3', '🔁', shTot(sh), 'Total shift'], ['c4', '⏱️', fmtDur(mnt), 'Total jam'], ['c5', '⚠️', cek, 'Perlu dicek'], ['c6', '⏳', bel, 'Belum pulang']], 'tim6') + shiftBox(sh);
   const tb = $('tmTable').querySelector('tbody');
-  tb.innerHTML = rows.length ? rows.map((s) => `<tr class="click" data-u="${esc(s.userId)}"><td><b>${esc(s.nama)}</b><div class="small dim">${esc(s.unit || '')}</div><div>${['P', 'S', 'D', 'M'].filter((k) => (s[k] || 0) > 0).map((k) => `<span class="tag tag-${k} mini">${SHIFT_NAME[k]} ${s[k]}</span>`).join('')}</div></td><td class="n">${s.hari}</td><td class="n mono">${fmtDur(s.menit)}</td><td class="n"><b>${s.P + s.S + (s.D || 0) + s.M}</b></td><td class="n">${s.cek ? '<span class="flag">' + s.cek + '</span>' : ''}${s.belum ? '<span class="flag bad">' + s.belum + '</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Tidak ada data.</td></tr>';
+  tb.innerHTML = rows.length ? rows.map((s) => `<tr class="click" data-u="${esc(s.userId)}"><td><b>${esc(s.nama)}</b><div class="small dim">${esc(s.unit || '')}</div><div>${SH_ALL.filter((k) => (s[k] || 0) > 0).map((k) => `<span class="tag tag-${k} mini">${SHIFT_NAME[k]} ${s[k]}</span>`).join('')}</div></td><td class="n">${s.hari}</td><td class="n mono">${fmtDur(s.menit)}</td><td class="n"><b>${shTot(s)}</b></td><td class="n">${s.cek ? '<span class="flag">' + s.cek + '</span>' : ''}${s.belum ? '<span class="flag bad">' + s.belum + '</span>' : ''}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Tidak ada data.</td></tr>';
   tb.querySelectorAll('tr.click').forEach((tr) => tr.addEventListener('click', () => openEmployee(tr.dataset.u)));
 }
 $('tmPrev').addEventListener('click', () => { tmKey = shiftKey(tmKey, -1); loadTim(); });
@@ -1169,7 +1180,7 @@ function openEmployee(uid_) {
 }
 function openKoreksi(r, uid_) {
   openGen(`<h2>✎ Koreksi Absen</h2><div class="small dim" style="margin-bottom:10px">${esc(r.nama)} · ${fmtDate(r.tanggal)}</div>${flagHtml(r)}
-    <div class="field" style="margin-top:10px"><label>Shift</label><select id="kSh">${['P', 'S', 'D', 'M', 'L'].map((s) => `<option ${s === r.shift ? 'selected' : ''} value="${s}">${s} — ${SHIFT_NAME[s]}</option>`).join('')}</select></div>
+    <div class="field" style="margin-top:10px"><label>Shift</label><select id="kSh">${SH_ALL.concat('L').map((s) => `<option ${s === r.shift ? 'selected' : ''} value="${s}">${s} — ${SHIFT_NAME[s]}</option>`).join('')}</select></div>
     <div class="row"><div class="field grow"><label>Jam masuk</label><input type="time" id="kIn" value="${esc(r.jamMasuk)}"></div><div class="field grow"><label>Jam pulang</label><input type="time" id="kOut" value="${esc(r.jamPulang || '')}"></div></div>
     <div class="field"><label>Tanggal pulang</label><input type="date" id="kTgl" value="${esc(r.tglPulang || r.tanggal)}"></div>
     <div class="field"><label>Catatan</label><input id="kCat" maxlength="300" value="${esc(r.catatan || '')}" placeholder="mis. lupa absen pulang"></div>
@@ -1191,23 +1202,70 @@ function openKoreksi(r, uid_) {
 }
 
 /* ---- export Excel ---- */
+/** Menyusun workbook Excel: judul, lalu data dikelompokkan per unit dengan sub total tiap unit. */
+function buildRekapWb(EJ, o) {
+  const wb = new EJ.Workbook(); wb.creator = 'Absensi RSI At-Tin Husada';
+  const thin = { style: 'thin', color: { argb: 'FF9AA6BD' } }, bd = { top: thin, left: thin, bottom: thin, right: thin };
+  const fill = (argb) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+  const nowT = nowJ(), cetak = 'Dicetak: ' + fmtDate(nowT.date) + ' ' + nowT.hhmm;
+  const periode = 'Periode: ' + periodLabel(o.key) + '  |  ' + (o.unit ? 'Unit: ' + o.unit : 'Semua unit');
+  const byUnit = (list) => { const m = {}; list.forEach((x) => { const u = x.unit || '(Tanpa unit)'; (m[u] = m[u] || []).push(x); }); return Object.keys(m).sort((a, b) => a.localeCompare(b)).map((u) => [u, m[u]]); };
+  function sheet(name, judul, cols) {
+    const ws = wb.addWorksheet(name); let rn = 0; const n = cols.length;
+    ws.columns = cols.map((c) => ({ width: c.width }));
+    const pad = (arr) => { const a = arr.slice(); while (a.length < n) a.push(''); return a; };
+    const add = (arr, st) => { rn++; const r = ws.addRow(pad(arr)); if (st) r.eachCell({ includeEmpty: true }, (c) => st(c)); return r; };
+    const merge = () => { try { ws.mergeCells(rn, 1, rn, n); } catch (e) { /* abaikan */ } };
+    add([judul], (c) => { c.font = { bold: true, size: 16, color: { argb: 'FF1458B0' } }; c.alignment = { vertical: 'middle', horizontal: 'left' }; }); merge();
+    add(['RSI At-Tin Husada Ngawi'], (c) => { c.font = { bold: true, size: 12 }; }); merge();
+    add([periode], (c) => { c.font = { size: 11 }; }); merge();
+    add([cetak], (c) => { c.font = { italic: true, size: 9, color: { argb: 'FF6A7592' } }; }); merge();
+    rn++; ws.addRow(pad([]));
+    const hr = add(cols.map((c) => c.header), (c) => { c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.fill = fill('FF1458B0'); c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; c.border = bd; }); hr.height = 28;
+    ws.views = [{ state: 'frozen', ySplit: rn }];
+    ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+    const body = (c) => { c.border = bd; c.alignment = { vertical: 'top', wrapText: true }; };
+    return {
+      ws, n,
+      band(text) { add([text], (c) => { c.font = { bold: true, size: 12, color: { argb: 'FF0B4A8F' } }; c.fill = fill('FFDCE9FB'); c.border = bd; c.alignment = { vertical: 'middle' }; }).height = 22; merge(); },
+      row(arr) { add(arr, body); },
+      sub(arr) { add(arr, (c) => { c.font = { bold: true }; c.fill = fill('FFF1F5FB'); c.border = { top: { style: 'medium', color: { argb: 'FF1458B0' } }, left: thin, right: thin, bottom: thin }; c.alignment = { vertical: 'middle', wrapText: true }; }); },
+      total(arr) { add(arr, (c) => { c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.fill = fill('FF1458B0'); c.border = bd; c.alignment = { vertical: 'middle' }; }).height = 24; },
+    };
+  }
+  // ---- Sheet Rekap
+  const cols = [{ header: 'No', width: 6 }, { header: 'Nama', width: 30 }, { header: 'Unit', width: 18 }, { header: 'Hari Hadir', width: 10 }, { header: 'Total Jam', width: 11 }, { header: 'Shift Pagi (P)', width: 10 }, { header: 'Shift Siang (S)', width: 10 }, { header: 'Shift Middle (D)', width: 10 }, { header: 'Shift Malam (M)', width: 10 }, { header: 'Shift Remote (R)', width: 10 }, { header: 'Total Shift', width: 10 }, { header: 'Absen di Libur', width: 10 }, { header: 'Perlu Dicek', width: 10 }, { header: 'Belum Pulang', width: 10 }];
+  const R = sheet('Rekap', 'REKAP ABSENSI KARYAWAN', cols);
+  const agg = (list) => { const t = { hari: 0, menit: 0, P: 0, S: 0, D: 0, M: 0, R: 0, L: 0, cek: 0, belum: 0 }; list.forEach((s) => { Object.keys(t).forEach((k) => { t[k] += (s[k] || 0); }); }); return t; };
+  const nums = (t) => [t.hari, +(t.menit / 60).toFixed(1), t.P, t.S, t.D, t.M, t.R, shTot(t), t.L, t.cek, t.belum];
+  const groups = byUnit(o.sum);
+  groups.forEach(([u, list]) => {
+    R.band('UNIT: ' + u + '   (' + list.length + ' karyawan)');
+    list.slice().sort((a, b) => a.nama.localeCompare(b.nama)).forEach((s, i) => R.row([i + 1, s.nama, s.unit, s.hari, +(s.menit / 60).toFixed(1), s.P || 0, s.S || 0, s.D || 0, s.M || 0, s.R || 0, shTot(s), s.L || 0, s.cek || 0, s.belum || 0]));
+    R.sub(['', 'Sub total ' + u, ''].concat(nums(agg(list))));
+  });
+  if (groups.length > 1) R.total(['', 'TOTAL KESELURUHAN', ''].concat(nums(agg(o.sum))));
+  // ---- Sheet Detail
+  const dcols = [{ header: 'Tanggal', width: 13 }, { header: 'Nama', width: 28 }, { header: 'Unit', width: 16 }, { header: 'Shift', width: 10 }, { header: 'Jam Masuk', width: 11 }, { header: 'Jam Pulang', width: 11 }, { header: 'Durasi', width: 10 }, { header: 'Status', width: 28 }, { header: 'Laporan Harian', width: 60 }, { header: 'Catatan', width: 24 }];
+  const D = sheet('Detail', 'DETAIL ABSENSI KARYAWAN', dcols);
+  byUnit(o.rows).forEach(([u, list]) => {
+    D.band('UNIT: ' + u + '   (' + list.length + ' absen)');
+    list.slice().sort((a, b) => (a.nama < b.nama ? -1 : a.nama > b.nama ? 1 : a.tanggal < b.tanggal ? -1 : 1)).forEach((r) => D.row([r.tanggal, r.nama, r.unit, SHIFT_NAME[r.shift] || r.shift, r.jamMasuk, r.jamPulang || '', r.durasi != null ? fmtDur(r.durasi) : '', flagsOf(r).map((f) => FLAG_LABEL[f] || f).join(', '), lapForUser(o.laporan, r.userId, r.tanggal, r.shift), r.catatan || '']));
+    D.sub(['', 'Sub total ' + u, '', '', '', '', fmtDur(list.reduce((a, r) => a + (r.durasi || 0), 0)), list.length + ' absen', '', '']);
+  });
+  return wb;
+}
+
 function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Gagal memuat pustaka Excel (cek internet)')); document.head.appendChild(s); }); }
 $('btnExport').addEventListener('click', async () => {
   if (!tmData) return; const b = $('btnExport'); b.disabled = true; b.innerHTML = '<span class="spin"></span> Menyusun…';
   try {
     if (!window.ExcelJS) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js');
     const unit = $('tmUnit').value; const sum = tmData.summary.filter((s) => !unit || s.unit === unit); const rows = tmData.rows.filter((r) => !unit || r.unit === unit);
-    const wb = new ExcelJS.Workbook(); wb.creator = 'Absensi RSI At-Tin Husada';
-    const thin = { style: 'thin', color: { argb: 'FF9AA6BD' } }, bd = { top: thin, left: thin, bottom: thin, right: thin };
-    const head = (ws, cols) => { ws.columns = cols; const h = ws.getRow(1); h.height = 24; h.eachCell((c) => { c.font = { bold: true, color: { argb: 'FFFFFFFF' } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1458B0' } }; c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; c.border = bd; }); ws.views = [{ state: 'frozen', ySplit: 1 }]; };
-    const ws = wb.addWorksheet('Rekap'); head(ws, [{ header: 'No', width: 6 }, { header: 'Nama', width: 30 }, { header: 'Unit', width: 18 }, { header: 'Hari Hadir', width: 11 }, { header: 'Total Jam', width: 12 }, { header: 'Shift P', width: 9 }, { header: 'Shift S', width: 9 }, { header: 'Shift D (Middle)', width: 9 }, { header: 'Shift M', width: 9 }, { header: 'Total Shift', width: 11 }, { header: 'Absen di Libur', width: 13 }, { header: 'Perlu Dicek', width: 12 }, { header: 'Belum Pulang', width: 13 }]);
-    sum.forEach((s, i) => ws.addRow([i + 1, s.nama, s.unit, s.hari, +(s.menit / 60).toFixed(1), s.P, s.S, s.D || 0, s.M, (s.P + s.S + (s.D || 0) + s.M), s.L, s.cek, s.belum]));
-    const wd = wb.addWorksheet('Detail'); head(wd, [{ header: 'Tanggal', width: 14 }, { header: 'Nama', width: 28 }, { header: 'Unit', width: 16 }, { header: 'Shift', width: 8 }, { header: 'Jam Masuk', width: 11 }, { header: 'Jam Pulang', width: 11 }, { header: 'Durasi', width: 10 }, { header: 'Status', width: 28 }, { header: 'Laporan Harian', width: 60 }, { header: 'Catatan', width: 24 }]);
-    rows.slice().sort((a, b) => (a.nama < b.nama ? -1 : a.nama > b.nama ? 1 : a.tanggal < b.tanggal ? -1 : 1)).forEach((r) => wd.addRow([r.tanggal, r.nama, r.unit, r.shift, r.jamMasuk, r.jamPulang || '', r.durasi != null ? fmtDur(r.durasi) : '', flagsOf(r).map((f) => FLAG_LABEL[f] || f).join(', '), lapForUser(tmData.laporan, r.userId, r.tanggal, r.shift), r.catatan || '']));
-    [ws, wd].forEach((w) => w.eachRow((row, n) => { if (n > 1) row.eachCell({ includeEmpty: true }, (c) => { c.border = bd; c.alignment = { vertical: 'top', wrapText: true }; }); }));
+    const wb = buildRekapWb(window.ExcelJS, { sum, rows, unit, key: tmKey, laporan: tmData.laporan });
     const buf = await wb.xlsx.writeBuffer(); const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-    a.download = 'Absensi_' + tmKey + (unit ? '_' + unit : '') + '.xlsx'; document.body.appendChild(a); a.click(); a.remove(); toast('Excel diunduh');
+    a.download = 'Rekap_Absensi_' + tmKey + (unit ? '_' + unit.replace(/[^A-Za-z0-9_-]+/g, '_') : '') + '.xlsx'; document.body.appendChild(a); a.click(); a.remove(); toast('Excel diunduh');
   } catch (e) { toast(e.message, true); }
   b.disabled = false; b.textContent = '⬇ Export Excel';
 });
@@ -1503,11 +1561,11 @@ function renderJaga() {
   if (filtering) units = units.filter((x) => x.orang.length);
   units.sort((a, b) => (b.unit === me.unit) - (a.unit === me.unit));
   const all = units.reduce((a, x) => a.concat(x.orang.map((o) => Object.assign({ unit: x.unit }, o))), []);
-  const byS = { P: 0, S: 0, D: 0, M: 0 }; all.forEach((o) => { if (byS[o.shift] !== undefined) byS[o.shift]++; });
-  $('jgSum').innerHTML = `<div><b>${all.length}</b><span>Sedang jaga</span></div><div><b>${byS.P}<i class="sep">|</i>${byS.S}</b><span>Pagi <i class="sep">|</i> Siang</span></div><div><b>${byS.D}<i class="sep">|</i>${byS.M}</b><span>Middle <i class="sep">|</i> Malam</span></div>`;
+  const byS = { P: 0, S: 0, D: 0, M: 0, R: 0 }; all.forEach((o) => { if (byS[o.shift] !== undefined) byS[o.shift]++; });
+  $('jgSum').innerHTML = `<div><b>${all.length}</b><span>Sedang jaga</span></div><div><b>${byS.P}<i class="sep">|</i>${byS.S}</b><span>Pagi <i class="sep">|</i> Siang</span></div><div><b>${byS.D}<i class="sep">|</i>${byS.M}</b><span>Middle <i class="sep">|</i> Malam</span></div><div><b>${byS.R}</b><span>Remote</span></div>`;
   $('jgAt').textContent = 'Terakhir: ' + (jagaData.now || '').substring(11, 19);
   if (view === 'shift') {
-    const order = ['P', 'S', 'D', 'M'];
+    const order = SH_ALL;
     $('jgList').innerHTML = order.filter((k) => !fs || k === fs).map((k) => {
       const list = all.filter((o) => o.shift === k).sort((a, b) => (a.unit < b.unit ? -1 : a.unit > b.unit ? 1 : a.nama < b.nama ? -1 : 1));
       return `<div class="glass card jg-unit"><h3><span><span class="tag tag-${k}">${SHIFT_NAME[k]}</span></span><span class="jg-n ${list.length ? '' : 'zero'}">${list.length}</span></h3>${list.length ? list.map((o) => jgPerson(o, o.unit)).join('') : '<div class="small dim">Tidak ada petugas pada shift ini.</div>'}</div>`;
